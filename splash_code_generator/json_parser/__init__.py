@@ -3,9 +3,8 @@ import json
 
 class JsonParser:
     def __init__(self, file_name):
-        self.json_decoded = None
-        with open(file_name, "r") as st_json:
-            self.json_decoded = json.load(st_json)
+        self.__file = file_name
 
-    def get_json_decoded(self):
-        return self.json_decoded
+    def parse(self):
+        with open(self.__file, "r") as st_json:
+            return json.load(st_json)
