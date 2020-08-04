@@ -1,3 +1,14 @@
+import re
+
+
+def camel(match):
+    return match.group(1) + match.group(2).upper()
+
+
+def append_line(string, new_string, indent):
+    return string + (" " * indent * 4) + new_string + "\n"
+
+
 class BuildUnitGenerator:
     def __init__(self, node_data_list, link_data_list):
         self.build_units = []
@@ -13,8 +24,22 @@ class BuildUnitGenerator:
         self.__modechange_input_ports = []
         self.__modechange_output_ports = []
         self.__links = link_data_list
+        snake_to_camel_reg = r"(.*?)_([a-zA-Z0-9])"
         for node in node_data_list:
             category = node["category"]
+            node["key"] = node["key"].lower().replace(" ", "_")
+
+            if(category != "buildUnit" and category != "factory"):
+                class_name = re.sub(
+                    snake_to_camel_reg, camel, node["key"], 0)
+                class_name = class_name[0:1].upper() + class_name[1:]
+                node["class_name"] = class_name
+                print(node["class_name"])
+                try:
+                    node["buildUnit"] = node["buildUnit"].lower().replace(" ", "_")
+                except KeyError:
+                    pass
+
             if(category == "processingComponent"):
                 self.__processing_components.append(node)
             elif(category == "sourceComponent"):
@@ -53,15 +78,14 @@ class BuildUnitGenerator:
     def __generate_build_unit(self, name=""):
         build_unit = {}
         build_unit["name"] = name
-        build_unit["file_name"] = name.lower().replace(
-            " ", "_") if name else "default_build_unit"
+        build_unit["file_name"] = name if name else "default_build_unit"
         build_unit["processing_components"] = self.__parse_component_info(
             "processingComponent", name)
         build_unit["source_components"] = self.__parse_component_info(
             "sourceComponent", name)
         build_unit["sink_components"] = self.__parse_component_info(
             "sinkComponent", name)
-        build_unit["fusion_operator"] = self.__parse_component_info(
+        build_unit["fusion_operators"] = self.__parse_component_info(
             "fusionOperator", name)
         build_unit["source_code"] = self.__generate_source_code(build_unit)
 
@@ -86,6 +110,7 @@ class BuildUnitGenerator:
                 continue
             component = {}
             component.update(_component)
+
             component["stream_input_ports"] = []
             component["stream_output_ports"] = []
             component["event_input_ports"] = []
@@ -108,32 +133,50 @@ class BuildUnitGenerator:
                 component["modechange_input_ports"].append(_modechange_port)
             for _modechange_port in self.__modechange_output_ports:
                 component["modechange_output_ports"].append(_modechange_port)
-
             result.append(component)
         return result
 
     def __generate_source_code(self, build_unit):
         _str = ""
-        _str = self.__append_line(_str, "'''", 0)
-        _str = self.__append_line(
-            _str, "Generated automatically by Splash Code Generator", 1)
-        _str = self.__append_line(_str, "'''", 0)
-        _str = self.__append_line(_str, self.__import_rcl(), 0)
+        _str = append_line(_str, "'''", 0)
+        _str = append_line(
+            _str, "Generated automatically by Splash Code Generator for {}".format(build_unit["file_name"]), 1)
+        _str = append_line(_str, "'''", 0)
+
+        _str = append_line(_str, self.__import_rcl(), 0)
+        if(len(build_unit["processing_components"]) > 0):
+            _str = append_line(_str, self.__import_components(
+                build_unit["processing_components"]), 0)
+        if(len(build_unit["source_components"]) > 0):
+            _str = append_line(_str, self.__import_components(
+                build_unit["source_components"]), 0)
+        if(len(build_unit["sink_components"]) > 0):
+            _str = append_line(_str, self.__import_components(
+                build_unit["sink_components"]), 0)
+        if(len(build_unit["fusion_operators"]) > 0):
+            _str = append_line(_str, self.__import_components(
+                build_unit["fusion_operators"]), 0)
         print(_str)
+        return _str
 
     def __import_rcl(self):
         _str = ""
 
-        _str = self.__append_line(_str, "import rclpy", 0)
-        _str = self.__append_line(_str, "from rclpy.node import Node", 0)
-        _str = self.__append_line(
+        _str = append_line(_str, "import rclpy", 0)
+        _str = append_line(_str, "from rclpy.node import Node", 0)
+        _str = append_line(
             _str, "from rclpy.executor import MultiThreadedExecutor", 0)
-        _str = self.__append_line(_str, "from std_msgs.msg import String", 0)
+        _str = append_line(_str, "from std_msgs.msg import String", 0)
 
         return _str
 
-    def __append_line(self, string, new_string, indent):
-        return string + (" " * indent * 4) + new_string + "\n"
+    def __import_components(self, components):
+        _str = ""
+        for component in components:
+            _str = append_line(
+                _str, "from .splash.{} import {}", 0).format(component["key"], component["class_name"])
+
+        return _str
 
     def __generate_node(self, component):
         pass
