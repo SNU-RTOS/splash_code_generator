@@ -147,6 +147,7 @@ class BuildUnitGenerator:
             _str, "Generated automatically by Splash Code Generator for {}".format(build_unit["file_name"]), 1)
         _str = append_lines(_str, "'''", 0)
         _str = append_lines(_str, self.__import_rcl(), 0)
+        _str = append_lines(_str, self.__import_scl_component_node(), 0)
         if(len(build_unit["processing_components"]) > 0):
             _str = append_lines(_str, self.__import_components(
                 build_unit["processing_components"]), 0)
@@ -170,7 +171,13 @@ class BuildUnitGenerator:
         _str = append_lines(_str, "from rclpy.node import Node", 0)
         _str = append_lines(
             _str, "from rclpy.executor import MultiThreadedExecutor", 0)
-        _str = append_lines(_str, "from std_msgs.msg import String", 0)
+        return _str
+
+    def __import_scl_component_node(self):
+        _str = ""
+
+        _str = append_lines(_str, "from scl import ComponentNode", 0)
+
         return _str
 
     def __import_components(self, components):
@@ -212,10 +219,6 @@ class BuildUnitGenerator:
         _str = append_lines(
             _str, "executor.add_node({}_node)".format(component["key"]), 0)
         _str = append_lines(_str, "{}.run()".format(component["key"]), 0)
-        return _str
-
-    def __generate_node_class(self):
-        _str = ""
         return _str
 
     def __generate_subscription(self, stream_port):
