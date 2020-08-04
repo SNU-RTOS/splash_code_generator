@@ -5,8 +5,11 @@ def camel(match):
     return match.group(1) + match.group(2).upper()
 
 
-def append_line(string, new_string, indent):
-    return string + (" " * indent * 4) + new_string + "\n"
+def append_lines(string, lines, indent):
+    line_list = lines.split('\n')
+    for line in line_list:
+        string = string + (" " * indent * 4) + line + "\n"
+    return string
 
 
 class BuildUnitGenerator:
@@ -34,7 +37,6 @@ class BuildUnitGenerator:
                     snake_to_camel_reg, camel, node["key"], 0)
                 class_name = class_name[0:1].upper() + class_name[1:]
                 node["class_name"] = class_name
-                print(node["class_name"])
                 try:
                     node["buildUnit"] = node["buildUnit"].lower().replace(" ", "_")
                 except KeyError:
@@ -69,11 +71,11 @@ class BuildUnitGenerator:
 
     def generate(self):
         # generate a default build unit
-        self.__generate_build_unit()
+        self.build_units.append(self.__generate_build_unit())
         # generate build units user made
         for _build_unit in self.__build_units:
-            self.__generate_build_unit(
-                _build_unit["key"])
+            self.build_units.append(
+                self.__generate_build_unit(_build_unit["key"]))
 
     def __generate_build_unit(self, name=""):
         build_unit = {}
@@ -88,6 +90,8 @@ class BuildUnitGenerator:
         build_unit["fusion_operators"] = self.__parse_component_info(
             "fusionOperator", name)
         build_unit["source_code"] = self.__generate_source_code(build_unit)
+
+        return build_unit
 
     def __parse_component_info(self, category, build_unit_name):
         components = []
@@ -138,54 +142,90 @@ class BuildUnitGenerator:
 
     def __generate_source_code(self, build_unit):
         _str = ""
-        _str = append_line(_str, "'''", 0)
-        _str = append_line(
+        _str = append_lines(_str, "'''", 0)
+        _str = append_lines(
             _str, "Generated automatically by Splash Code Generator for {}".format(build_unit["file_name"]), 1)
-        _str = append_line(_str, "'''", 0)
-
-        _str = append_line(_str, self.__import_rcl(), 0)
+        _str = append_lines(_str, "'''", 0)
+        _str = append_lines(_str, self.__import_rcl(), 0)
         if(len(build_unit["processing_components"]) > 0):
-            _str = append_line(_str, self.__import_components(
+            _str = append_lines(_str, self.__import_components(
                 build_unit["processing_components"]), 0)
         if(len(build_unit["source_components"]) > 0):
-            _str = append_line(_str, self.__import_components(
+            _str = append_lines(_str, self.__import_components(
                 build_unit["source_components"]), 0)
         if(len(build_unit["sink_components"]) > 0):
-            _str = append_line(_str, self.__import_components(
+            _str = append_lines(_str, self.__import_components(
                 build_unit["sink_components"]), 0)
         if(len(build_unit["fusion_operators"]) > 0):
-            _str = append_line(_str, self.__import_components(
+            _str = append_lines(_str, self.__import_components(
                 build_unit["fusion_operators"]), 0)
+        _str = append_lines(_str, self.__generate_main(build_unit), 0)
         print(_str)
         return _str
 
     def __import_rcl(self):
         _str = ""
 
-        _str = append_line(_str, "import rclpy", 0)
-        _str = append_line(_str, "from rclpy.node import Node", 0)
-        _str = append_line(
+        _str = append_lines(_str, "import rclpy", 0)
+        _str = append_lines(_str, "from rclpy.node import Node", 0)
+        _str = append_lines(
             _str, "from rclpy.executor import MultiThreadedExecutor", 0)
-        _str = append_line(_str, "from std_msgs.msg import String", 0)
-
+        _str = append_lines(_str, "from std_msgs.msg import String", 0)
         return _str
 
     def __import_components(self, components):
         _str = ""
         for component in components:
-            _str = append_line(
-                _str, "from .splash.{} import {}", 0).format(component["key"], component["class_name"])
+            _str = append_lines(
+                _str, "from .splash.{} import {}".format(component["key"], component["class_name"]), 0)
 
         return _str
 
-    def __generate_node(self, component):
-        pass
+    def __generate_main(self, build_unit):
+        _str = ""
+        _str = append_lines(_str, "def main(args=None):", 0)
+        _str = append_lines(_str, "rclpy.init(args=args)", 1)
+        _str = append_lines(_str, "executor = MultiThreadedExecutor()\n", 1)
+        for component in build_unit["processing_components"]:
+            _str = append_lines(
+                _str, self.__generate_lines_for_component(component), 1)
+        for component in build_unit["source_components"]:
+            _str = append_lines(
+                _str, self.__generate_lines_for_component(component), 1)
+        for component in build_unit["sink_components"]:
+            _str = append_lines(
+                _str, self.__generate_lines_for_component(component), 1)
+        for component in build_unit["fusion_operators"]:
+            _str = append_lines(
+                _str, self.__generate_lines_for_component(component), 1)
+        _str = append_lines(_str, "executor.spin()", 1)
+        _str = append_lines(_str, "rclpy.shutdown()", 1)
+        return _str
+
+    def __generate_lines_for_component(self, component):
+        _str = ""
+        _str = append_lines(_str, "{} = {}()".format(
+            component["key"], component["class_name"]), 0)
+        _str = append_lines(_str, "{}.setup()".format(component["key"]), 0)
+        _str = append_lines(
+            _str, "{0}_node = ComponentNode({0})".format(component["key"]), 0)
+        _str = append_lines(
+            _str, "executor.add_node({}_node)".format(component["key"]), 0)
+        _str = append_lines(_str, "{}.run()".format(component["key"]), 0)
+        return _str
+
+    def __generate_node_class(self):
+        _str = ""
+        return _str
 
     def __generate_subscription(self, stream_port):
-        pass
+        _str = ""
+        return _str
 
     def __generate_publisher(self, stream_port):
-        pass
+        _str = ""
+        return _str
 
     def __generate_service(self, event):
-        pass
+        _str = ""
+        return _str
