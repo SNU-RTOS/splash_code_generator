@@ -6,14 +6,22 @@ from .source_code_validator import SourceCodeValidator
 
 class CodeGenerator():
     def __init__(self, args):
-        self.ros_package_generator = ROSPackageGenerator(args.name, args.path)
-        self.json_parser = JsonParser(args.file)
-        self.source_code_generator = SourceCodeGenerator(
-            self.json_parser.get_json_decoded())
-        self.source_code_validator = SourceCodeValidator()
+        rosPackageGenerator = ROSPackageGenerator(args.name, args.path)
+
+        jsonParser = JsonParser(args.file)
+        json_parsed = jsonParser.parse()
+
+        self._sourceCodeGenerator = SourceCodeGenerator(json_parsed)
+
+        self._sourceCodeValidator = SourceCodeValidator()
+
+        self.source_code = None
 
     def generate(self):
-        pass
+        self.source_code = self._sourceCodeGenerator.generate()
 
     def validate(self):
-        pass
+        if(self.source_code):
+            self.validation = self.sourceCodeValidator.validate(source_code)
+        else:
+            print("Source code not generated yet")
