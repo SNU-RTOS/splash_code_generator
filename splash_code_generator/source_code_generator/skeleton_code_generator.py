@@ -4,7 +4,6 @@ import copy
 
 class SkeletonCodeGenerator:
     def __init__(self, node_data, link_data_list):
-        self.skeletons = []
         node_data_cp = copy.deepcopy(node_data)
         self.__processing_components = node_data_cp["processing_components"]
         self.__source_components = node_data_cp["source_components"]
@@ -83,7 +82,6 @@ class SkeletonCodeGenerator:
         _str = append_lines(_str, self.__import_scl(), 0)
         _str = append_lines(_str, self.__generate_class(component), 0)
 
-        print(_str)
         return _str
 
     def __import_scl(self):

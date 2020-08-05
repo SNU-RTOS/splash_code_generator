@@ -142,7 +142,6 @@ class BuildUnitGenerator:
                 build_unit["fusion_operators"]), 0)
         _str = append_lines(
             _str, self.__generate_build_unit_class(build_unit), 0)
-        print(_str)
         return _str
 
     def __generate_exec_code(self, build_unit):
@@ -155,7 +154,6 @@ class BuildUnitGenerator:
         _str = append_lines(
             _str, self.__import_build_unit(build_unit["name"], build_unit["class_name"]), 0)
         _str = append_lines(_str, self.__generate_main(build_unit), 0)
-        print(_str)
         return _str
 
     def __import_rcl(self):
