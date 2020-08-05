@@ -24,7 +24,9 @@ class BuildUnitGenerator:
     def generate(self):
         build_units = []
         # generate a default build unit
-        build_units.append(self.__generate_build_unit())
+        default_build_unit = self.__generate_build_unit()
+        if(default_build_unit):
+            build_units.append(default_build_unit)
         # generate build units user made
         for _build_unit in self.__build_units:
             build_units.append(self.__generate_build_unit(_build_unit["key"]))
@@ -44,6 +46,11 @@ class BuildUnitGenerator:
         build_unit["fusion_operators"] = self.__parse_component_info(
             "fusionOperator", name)
         build_unit["source_code"] = self.__generate_source_code(build_unit)
+        if len(build_unit["processing_components"]) == 0 \
+                and len(build_unit["source_components"]) == 0 \
+                and len(build_unit["sink_components"]) == 0 \
+                and len(build_unit["fusion_operators"]) == 0:
+            return None
 
         return build_unit
 
