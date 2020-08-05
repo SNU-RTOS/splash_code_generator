@@ -15,7 +15,7 @@ class SourceCodeGenerator:
         node_data_parsed = self.__parse_node_data(node_data_list)
 
         self.buildUnitGenerator = BuildUnitGenerator(
-            node_data_parsed)
+            node_data_parsed, link_data_list)
         self.skeletonCodeGenerator = SkeletonCodeGenerator(
             node_data_parsed, link_data_list)
 
