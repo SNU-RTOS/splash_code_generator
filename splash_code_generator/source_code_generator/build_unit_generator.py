@@ -182,7 +182,7 @@ class BuildUnitGenerator:
         _str = ""
         for component in components:
             _str = append_lines(
-                _str, "from .splash.{} import {}".format(component["name"], component["class_name"]), 0)
+                _str, "from ..{} import {}".format(component["name"], component["class_name"]), 0)
 
         return _str
 
