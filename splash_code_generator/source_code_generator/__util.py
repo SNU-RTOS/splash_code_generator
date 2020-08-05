@@ -46,18 +46,6 @@ def relate_event_output_ports(component, event_output_ports):
     return new_event_port
 
 
-def relate_modechange_input_ports(component, modechange_input_ports):
-    component["modechange_input_ports"] = []
-    new_modechange_port = []
-    for modechange_port in modechange_input_ports:
-        if(modechange_port["group"] == component["key"]):
-            modechange_port = __simplify_port(modechange_port)
-            component["modechange_input_ports"].append(modechange_port)
-        else:
-            new_modechange_port.append(modechange_port)
-    return new_modechange_port
-
-
 def relate_modechange_output_ports(component, modechange_output_ports):
     component["modechange_output_ports"] = []
     new_modechange_port = []

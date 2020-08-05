@@ -23,7 +23,6 @@ class SkeletonCodeGenerator:
         not_assigned_stream_ports = self.__stream_ports
         not_assigned_event_input_ports = self.__event_input_ports
         not_assigned_event_output_ports = self.__event_output_ports
-        not_assigned_modechange_input_ports = self.__modechange_input_ports
         not_assigned_modechange_output_ports = self.__modechange_output_ports
         for component in self.__processing_components:
             not_assigned_stream_ports = relate_stream_ports(
@@ -32,10 +31,8 @@ class SkeletonCodeGenerator:
                 component, not_assigned_event_input_ports)
             not_assigned_event_output_ports = relate_event_output_ports(
                 component, not_assigned_event_output_ports)
-            not_assigned_modechange_input_ports = relate_event_input_ports(
-                component, not_assigned_event_input_ports)
-            not_assigned_modechange_output_ports = relate_event_output_ports(
-                component, not_assigned_event_output_ports)
+            not_assigned_modechange_output_ports = relate_modechange_output_ports(
+                component, not_assigned_modechange_output_ports)
             skeletons.append(self.__generate_skeleton(component))
         for component in self.__source_components:
             not_assigned_stream_ports = relate_stream_ports(
@@ -44,10 +41,8 @@ class SkeletonCodeGenerator:
                 component, not_assigned_event_input_ports)
             not_assigned_event_output_ports = relate_event_output_ports(
                 component, not_assigned_event_output_ports)
-            not_assigned_modechange_input_ports = relate_event_input_ports(
-                component, not_assigned_event_input_ports)
-            not_assigned_modechange_output_ports = relate_event_output_ports(
-                component, not_assigned_event_output_ports)
+            not_assigned_modechange_output_ports = relate_modechange_output_ports(
+                component, not_assigned_modechange_output_ports)
             skeletons.append(self.__generate_skeleton(component))
         for component in self.__sink_components:
             not_assigned_stream_ports = relate_stream_ports(
@@ -56,10 +51,8 @@ class SkeletonCodeGenerator:
                 component, not_assigned_event_input_ports)
             not_assigned_event_output_ports = relate_event_output_ports(
                 component, not_assigned_event_output_ports)
-            not_assigned_modechange_input_ports = relate_event_input_ports(
-                component, not_assigned_event_input_ports)
-            not_assigned_modechange_output_ports = relate_event_output_ports(
-                component, not_assigned_event_output_ports)
+            not_assigned_modechange_output_ports = relate_modechange_output_ports(
+                component, not_assigned_modechange_output_ports)
             skeletons.append(self.__generate_skeleton(component))
         for component in self.__fusion_operators:
             not_assigned_stream_ports = relate_stream_ports(
@@ -68,10 +61,8 @@ class SkeletonCodeGenerator:
                 component, not_assigned_event_input_ports)
             not_assigned_event_output_ports = relate_event_output_ports(
                 component, not_assigned_event_output_ports)
-            not_assigned_modechange_input_ports = relate_event_input_ports(
-                component, not_assigned_event_input_ports)
-            not_assigned_modechange_output_ports = relate_event_output_ports(
-                component, not_assigned_event_output_ports)
+            not_assigned_modechange_output_ports = relate_modechange_output_ports(
+                component, not_assigned_modechange_output_ports)
             skeletons.append(self.__generate_skeleton(component))
         return skeletons
 
@@ -89,7 +80,6 @@ class SkeletonCodeGenerator:
         _str = append_lines(_str, "'''", 0)
         _str = append_lines(_str, self.__import_scl(), 0)
         _str = append_lines(_str, self.__generate_class(component), 0)
-        print(_str)
         return _str
 
     def __import_scl(self):

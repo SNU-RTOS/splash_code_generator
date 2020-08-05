@@ -24,7 +24,6 @@ class BuildUnitGenerator:
         not_assigned_stream_ports = self.__stream_ports
         not_assigned_event_input_ports = self.__event_input_ports
         not_assigned_event_output_ports = self.__event_output_ports
-        not_assigned_modechange_input_ports = self.__modechange_input_ports
         not_assigned_modechange_output_ports = self.__modechange_output_ports
 
         for component in self.__processing_components:
@@ -34,10 +33,8 @@ class BuildUnitGenerator:
                 component, not_assigned_event_input_ports)
             not_assigned_event_output_ports = relate_event_output_ports(
                 component, not_assigned_event_output_ports)
-            not_assigned_modechange_input_ports = relate_event_input_ports(
-                component, not_assigned_event_input_ports)
-            not_assigned_modechange_output_ports = relate_event_output_ports(
-                component, not_assigned_event_output_ports)
+            not_assigned_modechange_output_ports = relate_modechange_output_ports(
+                component, not_assigned_modechange_output_ports)
         for component in self.__source_components:
             not_assigned_stream_ports = relate_stream_ports(
                 component, not_assigned_stream_ports)
@@ -45,10 +42,8 @@ class BuildUnitGenerator:
                 component, not_assigned_event_input_ports)
             not_assigned_event_output_ports = relate_event_output_ports(
                 component, not_assigned_event_output_ports)
-            not_assigned_modechange_input_ports = relate_event_input_ports(
-                component, not_assigned_event_input_ports)
-            not_assigned_modechange_output_ports = relate_event_output_ports(
-                component, not_assigned_event_output_ports)
+            not_assigned_modechange_output_ports = relate_modechange_output_ports(
+                component, not_assigned_modechange_output_ports)
         for component in self.__sink_components:
             not_assigned_stream_ports = relate_stream_ports(
                 component, not_assigned_stream_ports)
@@ -56,10 +51,8 @@ class BuildUnitGenerator:
                 component, not_assigned_event_input_ports)
             not_assigned_event_output_ports = relate_event_output_ports(
                 component, not_assigned_event_output_ports)
-            not_assigned_modechange_input_ports = relate_event_input_ports(
-                component, not_assigned_event_input_ports)
-            not_assigned_modechange_output_ports = relate_event_output_ports(
-                component, not_assigned_event_output_ports)
+            not_assigned_modechange_output_ports = relate_modechange_output_ports(
+                component, not_assigned_modechange_output_ports)
         for component in self.__fusion_operators:
             not_assigned_stream_ports = relate_stream_ports(
                 component, not_assigned_stream_ports)
@@ -67,10 +60,8 @@ class BuildUnitGenerator:
                 component, not_assigned_event_input_ports)
             not_assigned_event_output_ports = relate_event_output_ports(
                 component, not_assigned_event_output_ports)
-            not_assigned_modechange_input_ports = relate_event_input_ports(
-                component, not_assigned_event_input_ports)
-            not_assigned_modechange_output_ports = relate_event_output_ports(
-                component, not_assigned_event_output_ports)
+            not_assigned_modechange_output_ports = relate_modechange_output_ports(
+                component, not_assigned_modechange_output_ports)
         # generate a default build unit
         default_build_unit = self.__generate_build_unit("")
         if(default_build_unit):
@@ -233,8 +224,11 @@ class BuildUnitGenerator:
         name = ""
         factory = ""
         mode = ""
-        input_ports = []
-        output_ports = []
+        stream_input_ports = []
+        stream_output_ports = []
+        event_input_ports = []
+        event_output_ports = []
+        modechange_output_ports = []
         name = component["name"]
         try:
             factory = component["group"]
@@ -243,12 +237,14 @@ class BuildUnitGenerator:
             pass
         input_ports = component["stream_input_ports"]
         output_ports = component["stream_output_ports"]
-
+        event_input_ports = component["event_input_ports"]
+        event_output_ports = component["event_output_ports"]
+        modechange_output_ports = component["modechange_output_ports"]
         _str = append_lines(_str, "{} = {}()".format(
             component["name"], component["class_name"]), 0)
         _str = append_lines(_str, "{}.setup()".format(component["name"]), 0)
         _str = append_lines(
-            _str, "{}.set_info(factory=\"{}\", mode=\"{}\", input_ports={}, output_ports={})".format(name, factory, mode, input_ports, output_ports), 0)
+            _str, "{}.set_info(factory=\"{}\",mode=\"{}\", stream_input_ports={}, stream_output_ports={}, event_input_ports={}, event_output_ports={}, modechange_output_ports={})".format(name, factory, mode, stream_input_ports, stream_output_ports, event_input_ports, event_output_ports, modechange_output_ports), 0)
         _str = append_lines(
             _str, "{0}_node = ComponentNode({0})".format(component["name"]), 0)
         _str = append_lines(
