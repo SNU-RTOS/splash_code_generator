@@ -1,9 +1,3 @@
-import re
-
-
-def camel(match):
-    return match.group(1) + match.group(2).upper()
-
 
 def append_lines(string, lines, indent):
     line_list = lines.split('\n')
@@ -13,69 +7,29 @@ def append_lines(string, lines, indent):
 
 
 class BuildUnitGenerator:
-    def __init__(self, node_data_list, link_data_list):
-        self.build_units = []
-        self.__processing_components = []
-        self.__source_components = []
-        self.__sink_components = []
-        self.__fusion_operators = []
-        self.__factories = []
-        self.__build_units = []
-        self.__stream_ports = []
-        self.__event_input_ports = []
-        self.__event_output_ports = []
-        self.__modechange_input_ports = []
-        self.__modechange_output_ports = []
-        self.__links = link_data_list
-        snake_to_camel_reg = r"(.*?)_([a-zA-Z0-9])"
-        for node in node_data_list:
-            category = node["category"]
-            node["key"] = node["key"].lower().replace(" ", "_")
-
-            if(category != "buildUnit" and category != "factory"):
-                class_name = re.sub(
-                    snake_to_camel_reg, camel, node["key"], 0)
-                class_name = class_name[0:1].upper() + class_name[1:]
-                node["class_name"] = class_name
-                try:
-                    node["buildUnit"] = node["buildUnit"].lower().replace(" ", "_")
-                except KeyError:
-                    pass
-
-            if(category == "processingComponent"):
-                self.__processing_components.append(node)
-            elif(category == "sourceComponent"):
-                self.__source_components.append(node)
-            elif(category == "sinkComponent"):
-                self.__sink_components.append(node)
-            elif(category == "fusionOperator"):
-                self.__fusion_operators.append(node)
-            elif(category == "factory"):
-                self.__factories.append(node)
-            elif(category == "buildUnit"):
-                self.__build_units.append(node)
-            elif(category == "streamPort"):
-                self.__stream_ports.append(node)
-            elif(category == "streamOutputPort"):
-                self.__stream_output_ports.append(node)
-            elif(category == "eventInputPort"):
-                self.__event_input_ports.append(node)
-            elif(category == "eventOutputPort"):
-                self.__event_output_ports.append(node)
-            elif(category == "modeChangeInputPort"):
-                self.__modechange_input_ports.append(node)
-            elif(category == "modeChangeOutputPort"):
-                self.__modechange_output_ports.append(ndoe)
-            else:
-                print("Error")
+    def __init__(self, node_data):
+        self.__processing_components = node_data["processing_components"]
+        self.__source_components = node_data["source_components"]
+        self.__sink_components = node_data["sink_components"]
+        self.__fusion_operators = node_data["fusion_operators"]
+        self.__factories = node_data["factories"]
+        self.__build_units = node_data["build_units"]
+        self.__stream_ports = node_data["stream_ports"]
+        self.__event_input_ports = node_data["event_input_ports"]
+        self.__event_output_ports = node_data["event_output_ports"]
+        self.__modechange_input_ports = node_data["modechange_input_ports"]
+        self.__modechange_output_ports = node_data["modechange_output_ports"]
+        # self.__links = link_data_list
 
     def generate(self):
+        build_units = []
         # generate a default build unit
-        self.build_units.append(self.__generate_build_unit())
+        build_units.append(self.__generate_build_unit())
         # generate build units user made
         for _build_unit in self.__build_units:
-            self.build_units.append(
-                self.__generate_build_unit(_build_unit["key"]))
+            build_units.append(self.__generate_build_unit(_build_unit["key"]))
+
+        return build_units
 
     def __generate_build_unit(self, name=""):
         build_unit = {}
@@ -184,7 +138,7 @@ class BuildUnitGenerator:
         _str = ""
         for component in components:
             _str = append_lines(
-                _str, "from .splash.{} import {}".format(component["key"], component["class_name"]), 0)
+                _str, "from .splash.{} import {}".format(component["name"], component["class_name"]), 0)
 
         return _str
 
@@ -212,13 +166,13 @@ class BuildUnitGenerator:
     def __generate_lines_for_component(self, component):
         _str = ""
         _str = append_lines(_str, "{} = {}()".format(
-            component["key"], component["class_name"]), 0)
-        _str = append_lines(_str, "{}.setup()".format(component["key"]), 0)
+            component["name"], component["class_name"]), 0)
+        _str = append_lines(_str, "{}.setup()".format(component["name"]), 0)
         _str = append_lines(
-            _str, "{0}_node = ComponentNode({0})".format(component["key"]), 0)
+            _str, "{0}_node = ComponentNode({0})".format(component["name"]), 0)
         _str = append_lines(
-            _str, "executor.add_node({}_node)".format(component["key"]), 0)
-        _str = append_lines(_str, "{}.run()".format(component["key"]), 0)
+            _str, "executor.add_node({}_node)".format(component["name"]), 0)
+        _str = append_lines(_str, "{}.run()".format(component["name"]), 0)
         return _str
 
     def __generate_subscription(self, stream_port):

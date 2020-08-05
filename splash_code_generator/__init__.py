@@ -11,17 +11,18 @@ class CodeGenerator():
         jsonParser = JsonParser(args.file)
         json_parsed = jsonParser.parse()
 
-        self._sourceCodeGenerator = SourceCodeGenerator(json_parsed)
+        self.__sourceCodeGenerator = SourceCodeGenerator(json_parsed)
 
-        self._sourceCodeValidator = SourceCodeValidator()
+        self.__sourceCodeValidator = SourceCodeValidator()
 
         self.source_code = None
 
     def generate(self):
-        self.source_code = self._sourceCodeGenerator.generate()
+        self.source_code = self.__sourceCodeGenerator.generate()
 
     def validate(self):
         if(self.source_code):
-            self.validation = self.sourceCodeValidator.validate(source_code)
+            self.validation = self.__sourceCodeValidator.validate(
+                self.source_code)
         else:
             print("Source code not generated yet")

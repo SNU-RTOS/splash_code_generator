@@ -3,4 +3,4 @@ class SourceCodeValidator:
         pass
 
     def validate(self, source_code):
-        return true
+        return True
