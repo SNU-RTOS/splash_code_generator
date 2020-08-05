@@ -1,4 +1,4 @@
-from .__util import append_lines
+from .__util import *
 import copy
 
 
@@ -21,51 +21,59 @@ class SkeletonCodeGenerator:
     def generate(self):
         skeletons = []
         not_assigned_stream_ports = self.__stream_ports
+        not_assigned_event_input_ports = self.__event_input_ports
+        not_assigned_event_output_ports = self.__event_output_ports
+        not_assigned_modechange_input_ports = self.__modechange_input_ports
+        not_assigned_modechange_output_ports = self.__modechange_output_ports
         for component in self.__processing_components:
-            component, not_assigned_stream_ports = self.__relate_stream_ports(
+            not_assigned_stream_ports = relate_stream_ports(
                 component, not_assigned_stream_ports)
+            not_assigned_event_input_ports = relate_event_input_ports(
+                component, not_assigned_event_input_ports)
+            not_assigned_event_output_ports = relate_event_output_ports(
+                component, not_assigned_event_output_ports)
+            not_assigned_modechange_input_ports = relate_event_input_ports(
+                component, not_assigned_event_input_ports)
+            not_assigned_modechange_output_ports = relate_event_output_ports(
+                component, not_assigned_event_output_ports)
             skeletons.append(self.__generate_skeleton(component))
         for component in self.__source_components:
-            component, not_assigned_stream_ports = self.__relate_stream_ports(
+            not_assigned_stream_ports = relate_stream_ports(
                 component, not_assigned_stream_ports)
+            not_assigned_event_input_ports = relate_event_input_ports(
+                component, not_assigned_event_input_ports)
+            not_assigned_event_output_ports = relate_event_output_ports(
+                component, not_assigned_event_output_ports)
+            not_assigned_modechange_input_ports = relate_event_input_ports(
+                component, not_assigned_event_input_ports)
+            not_assigned_modechange_output_ports = relate_event_output_ports(
+                component, not_assigned_event_output_ports)
             skeletons.append(self.__generate_skeleton(component))
         for component in self.__sink_components:
-            component, not_assigned_stream_ports = self.__relate_stream_ports(
+            not_assigned_stream_ports = relate_stream_ports(
                 component, not_assigned_stream_ports)
+            not_assigned_event_input_ports = relate_event_input_ports(
+                component, not_assigned_event_input_ports)
+            not_assigned_event_output_ports = relate_event_output_ports(
+                component, not_assigned_event_output_ports)
+            not_assigned_modechange_input_ports = relate_event_input_ports(
+                component, not_assigned_event_input_ports)
+            not_assigned_modechange_output_ports = relate_event_output_ports(
+                component, not_assigned_event_output_ports)
             skeletons.append(self.__generate_skeleton(component))
         for component in self.__fusion_operators:
-            component, not_assigned_stream_ports = self.__relate_stream_ports(
+            not_assigned_stream_ports = relate_stream_ports(
                 component, not_assigned_stream_ports)
+            not_assigned_event_input_ports = relate_event_input_ports(
+                component, not_assigned_event_input_ports)
+            not_assigned_event_output_ports = relate_event_output_ports(
+                component, not_assigned_event_output_ports)
+            not_assigned_modechange_input_ports = relate_event_input_ports(
+                component, not_assigned_event_input_ports)
+            not_assigned_modechange_output_ports = relate_event_output_ports(
+                component, not_assigned_event_output_ports)
             skeletons.append(self.__generate_skeleton(component))
-
         return skeletons
-
-    def __relate_stream_ports(self, component, stream_ports):
-        component["stream_input_ports"] = []
-        component["stream_output_ports"] = []
-        new_stream_port = []
-        for stream_port in stream_ports:
-            if(stream_port["group"] == component["key"]):
-                if(stream_port["PORT_TYPE"] == "STREAM_INPUT_PORT"):
-                    stream_port = self.__simplify_port(stream_port)
-                    component["stream_input_ports"].append(stream_port)
-                elif(stream_port["PORT_TYPE"] == "STREAM_OUTPUT_PORT"):
-                    stream_port = self.__simplify_port(stream_port)
-                    component["stream_output_ports"].append(stream_port)
-            else:
-                new_stream_port.append(stream_port)
-        return component, new_stream_port
-
-    def __simplify_port(self, port):
-        try:
-            del port['category']
-            del port['loc']
-            del port['group']
-            del port['buildUnit']
-        except KeyError:
-            pass
-
-        return port
 
     def __generate_skeleton(self, component):
         skeleton = {}
@@ -81,7 +89,7 @@ class SkeletonCodeGenerator:
         _str = append_lines(_str, "'''", 0)
         _str = append_lines(_str, self.__import_scl(), 0)
         _str = append_lines(_str, self.__generate_class(component), 0)
-
+        print(_str)
         return _str
 
     def __import_scl(self):
@@ -96,7 +104,9 @@ class SkeletonCodeGenerator:
         _str = append_lines(_str, self.__generate_init(component), 1)
         _str = append_lines(_str, self.__generate_setup(component), 1)
         _str = append_lines(_str, self.__generate_run(), 1)
-        _str = append_lines(_str, self.__generate_user_funcs(component), 1)
+        _str = append_lines(_str, self.__generate_user_callbacks(component), 1)
+        _str = append_lines(
+            _str, self.__generate_event_callbacks(component), 1)
         return _str
 
     def __generate_init(self, component):
@@ -113,21 +123,30 @@ class SkeletonCodeGenerator:
         for input_port in component["stream_input_ports"]:
             channel = self.__find_channel_name_for_input_port(input_port)
             _str = append_lines(_str, self.__append_input_port(
-                channel, "user_func_{}".format(count)), 1)
+                channel, "user_callback_{}".format(count)), 1)
             count = count + 1
         for output_port in component["stream_output_ports"]:
             channel = output_port["Channel"]
             _str = append_lines(_str, self.__append_output_port(channel), 1)
         return _str
 
-    def __generate_user_funcs(self, component):
+    def __generate_user_callbacks(self, component):
         _str = ""
         count = 1
         for input_port in component["stream_input_ports"]:
             _str = append_lines(
-                _str, "def user_func_{}(self, msg):".format(count), 0)
+                _str, "def user_callback_{}(self, msg):".format(count), 0)
             _str = append_lines(_str, "pass\n", 1)
             count = count + 1
+        return _str
+
+    def __generate_event_callbacks(self, component):
+        _str = ""
+        for input_port in component["event_input_ports"]:
+            event_name = self.__find_event_name_for_input_port(input_port)
+            _str = append_lines(
+                _str, "def {}_callback(self, event):".format(event_name.lower().replace(" ", "_")), 0)
+            _str = append_lines(_str, "pass\n", 1)
         return _str
 
     def __generate_run(self):
@@ -136,10 +155,10 @@ class SkeletonCodeGenerator:
         _str = append_lines(_str, "pass", 1)
         return _str
 
-    def __append_input_port(self, channel, user_func_name):
+    def __append_input_port(self, channel, user_callback_name):
         _str = ""
         _str = "self.attach_input_port(String, \"{}\", {})".format(
-            channel, user_func_name)
+            channel, user_callback_name)
         return _str
 
     def __find_channel_name_for_input_port(self, input_port):
@@ -148,6 +167,14 @@ class SkeletonCodeGenerator:
                 for stream_port in self.__stream_ports:
                     if(stream_port["PORT_TYPE"] == "STREAM_OUTPUT_PORT" and stream_port["key"] == link["from"]):
                         return stream_port["Channel"]
+        return None
+
+    def __find_event_name_for_input_port(self, input_port):
+        for link in self.__links:
+            if(link["to"] == input_port["key"]):
+                for event_port in self.__event_output_ports:
+                    if(event_port["key"] == link["from"]):
+                        return event_port["Event"]
         return None
 
     def __append_output_port(self, channel):

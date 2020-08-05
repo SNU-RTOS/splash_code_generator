@@ -1,4 +1,4 @@
-from .__util import append_lines
+from .__util import *
 import copy
 
 
@@ -21,18 +21,56 @@ class BuildUnitGenerator:
     def generate(self):
         build_units = []
         not_assigned_stream_ports = self.__stream_ports
+        not_assigned_stream_ports = self.__stream_ports
+        not_assigned_event_input_ports = self.__event_input_ports
+        not_assigned_event_output_ports = self.__event_output_ports
+        not_assigned_modechange_input_ports = self.__modechange_input_ports
+        not_assigned_modechange_output_ports = self.__modechange_output_ports
+
         for component in self.__processing_components:
-            component, not_assigned_stream_ports = self.__relate_stream_ports(
+            not_assigned_stream_ports = relate_stream_ports(
                 component, not_assigned_stream_ports)
+            not_assigned_event_input_ports = relate_event_input_ports(
+                component, not_assigned_event_input_ports)
+            not_assigned_event_output_ports = relate_event_output_ports(
+                component, not_assigned_event_output_ports)
+            not_assigned_modechange_input_ports = relate_event_input_ports(
+                component, not_assigned_event_input_ports)
+            not_assigned_modechange_output_ports = relate_event_output_ports(
+                component, not_assigned_event_output_ports)
         for component in self.__source_components:
-            component, not_assigned_stream_ports = self.__relate_stream_ports(
+            not_assigned_stream_ports = relate_stream_ports(
                 component, not_assigned_stream_ports)
+            not_assigned_event_input_ports = relate_event_input_ports(
+                component, not_assigned_event_input_ports)
+            not_assigned_event_output_ports = relate_event_output_ports(
+                component, not_assigned_event_output_ports)
+            not_assigned_modechange_input_ports = relate_event_input_ports(
+                component, not_assigned_event_input_ports)
+            not_assigned_modechange_output_ports = relate_event_output_ports(
+                component, not_assigned_event_output_ports)
         for component in self.__sink_components:
-            component, not_assigned_stream_ports = self.__relate_stream_ports(
+            not_assigned_stream_ports = relate_stream_ports(
                 component, not_assigned_stream_ports)
+            not_assigned_event_input_ports = relate_event_input_ports(
+                component, not_assigned_event_input_ports)
+            not_assigned_event_output_ports = relate_event_output_ports(
+                component, not_assigned_event_output_ports)
+            not_assigned_modechange_input_ports = relate_event_input_ports(
+                component, not_assigned_event_input_ports)
+            not_assigned_modechange_output_ports = relate_event_output_ports(
+                component, not_assigned_event_output_ports)
         for component in self.__fusion_operators:
-            component, not_assigned_stream_ports = self.__relate_stream_ports(
+            not_assigned_stream_ports = relate_stream_ports(
                 component, not_assigned_stream_ports)
+            not_assigned_event_input_ports = relate_event_input_ports(
+                component, not_assigned_event_input_ports)
+            not_assigned_event_output_ports = relate_event_output_ports(
+                component, not_assigned_event_output_ports)
+            not_assigned_modechange_input_ports = relate_event_input_ports(
+                component, not_assigned_event_input_ports)
+            not_assigned_modechange_output_ports = relate_event_output_ports(
+                component, not_assigned_event_output_ports)
         # generate a default build unit
         default_build_unit = self.__generate_build_unit("")
         if(default_build_unit):
@@ -44,24 +82,6 @@ class BuildUnitGenerator:
 
         return build_units
 
-    def __relate_stream_ports(self, component, stream_ports):
-        component["stream_input_ports"] = []
-        component["stream_output_ports"] = []
-        new_stream_port = []
-        for stream_port in stream_ports:
-            if(stream_port["group"] == component["key"]):
-                if(stream_port["PORT_TYPE"] == "STREAM_INPUT_PORT"):
-                    stream_port = self.__simplify_port(stream_port)
-                    stream_port["channel"] = self.__find_channel_name_for_input_port(
-                        stream_port)
-                    component["stream_input_ports"].append(stream_port)
-                elif(stream_port["PORT_TYPE"] == "STREAM_OUTPUT_PORT"):
-                    stream_port = self.__simplify_port(stream_port)
-                    component["stream_output_ports"].append(stream_port)
-            else:
-                new_stream_port.append(stream_port)
-        return component, new_stream_port
-
     def __find_channel_name_for_input_port(self, input_port):
         for link in self.__links:
             if(link["to"] == input_port["key"]):
@@ -69,17 +89,6 @@ class BuildUnitGenerator:
                     if(stream_port["PORT_TYPE"] == "STREAM_OUTPUT_PORT" and stream_port["key"] == link["from"]):
                         return stream_port["Channel"]
         return None
-
-    def __simplify_port(self, port):
-        try:
-            del port['category']
-            del port['loc']
-            del port['group']
-            del port['buildUnit']
-        except KeyError:
-            pass
-
-        return port
 
     def __generate_build_unit(self, key, name="", class_name=""):
         build_unit = {}
