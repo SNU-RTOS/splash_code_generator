@@ -251,7 +251,3 @@ class BuildUnitGenerator:
             _str, "self.componentNodes.append({}_node)".format(component["name"]), 0)
         _str = append_lines(_str, "{}.run()".format(component["name"]), 0)
         return _str
-
-    def __generate_service(self, event):
-        _str = ""
-        return _str
