@@ -62,7 +62,6 @@ def __simplify_port(port):
     try:
         del port['category']
         del port['loc']
-        del port['group']
         del port['buildUnit']
     except KeyError:
         pass

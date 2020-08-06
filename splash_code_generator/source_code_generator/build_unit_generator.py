@@ -17,6 +17,7 @@ class BuildUnitGenerator:
         self.__modechange_input_ports = node_data_cp["modechange_input_ports"]
         self.__modechange_output_ports = node_data_cp["modechange_output_ports"]
         self.__links = link_data
+        self.__links_transparent = self.__make_links_transparent(link_data)
 
     def generate(self):
         build_units = []
@@ -72,6 +73,56 @@ class BuildUnitGenerator:
                 _build_unit["key"], _build_unit["name"], _build_unit["class_name"]))
 
         return build_units
+
+    def __make_links_transparent(self, link_data):
+        new_links = []
+        for link in link_data:
+            new_link = {"from": None, "to": None}
+            for port in self.__stream_ports:
+                key = ""
+                factory = ""
+                mode = ""
+                if port["PORT_TYPE"] == "STREAM_OUTPUT_PORT" and port["key"] == link["from"]:
+                    parent = next(
+                        (component for component in self.__processing_components if component["key"] == port["group"]), False)
+                    if not parent:
+                        parent = next(
+                            (component for component in self.__source_components if component["key"] == port["group"]), False)
+                    if not parent:
+                        parent = next(
+                            (component for component in self.__fusion_operators if component["key"] == port["group"]), False)
+                    try:
+                        key = parent["key"]
+                        factory = parent["group"]
+                        mode = parent["mode"]
+                    except KeyError:
+                        pass
+                    new_link["from"] = {
+                        "key": port["key"], "parent": {"key": key, "factory": factory, "mode": mode}, "channel": port["Channel"]}
+
+                elif port["PORT_TYPE"] == "STREAM_INPUT_PORT" and port["key"] == link["to"]:
+                    parent = next(
+                        (component for component in self.__processing_components if component["key"] == port["group"]), False)
+                    if not parent:
+                        parent = next(
+                            (component for component in self.__sink_components if component["key"] == port["group"]), False)
+                    if not parent:
+                        parent = next(
+                            (component for component in self.__fusion_operators if component["key"] == port["group"]), False)
+                    try:
+                        key = parent["key"]
+                        factory = parent["group"]
+                        mode = parent["mode"]
+                    except KeyError:
+                        pass
+                    new_link["to"] = {
+                        "key": port["key"], "parent": {"key": key, "factory": factory, "mode": mode}, "channel": self.__find_channel_name_for_input_port(port)}
+
+                if(new_link["from"] and new_link["to"]):
+                    new_links.append(new_link)
+                    break
+
+        return new_links
 
     def __find_channel_name_for_input_port(self, input_port):
         for link in self.__links:
@@ -186,7 +237,7 @@ class BuildUnitGenerator:
         _str = append_lines(_str, "build_unit = {}()".format(
             build_unit["class_name"]), 1)
         _str = append_lines(_str, "for component in build_unit.components:", 1)
-        _str = append_lines(_str, "executor.add_node(node)", 2)
+        _str = append_lines(_str, "executor.add_node(component)", 2)
         _str = append_lines(_str, "executor.spin()", 1)
         _str = append_lines(_str, "rclpy.shutdown()", 1)
         return _str
@@ -232,11 +283,19 @@ class BuildUnitGenerator:
         event_input_ports = component["event_input_ports"]
         event_output_ports = component["event_output_ports"]
         modechange_output_ports = component["modechange_output_ports"]
+        links = []
+        for link in self.__links_transparent:
+            for input_port in input_ports:
+                if input_port["key"] == link["to"]["key"]:
+                    links.append(link)
+            for output_port in output_ports:
+                if output_port["key"] == link["from"]["key"]:
+                    links.append(link)
         _str = append_lines(_str, "{} = {}()".format(
             component["name"], component["class_name"]), 0)
-        _str = append_lines(_str, "{}.setup()".format(component["name"]), 0)
         _str = append_lines(
-            _str, "{}.set_info(factory=\"{}\",mode=\"{}\", stream_input_ports={}, stream_output_ports={}, event_input_ports={}, event_output_ports={}, modechange_output_ports={})".format(name, factory, mode, stream_input_ports, stream_output_ports, event_input_ports, event_output_ports, modechange_output_ports), 0)
+            _str, "{}.set_info(factory=\"{}\",mode=\"{}\", stream_input_ports={}, stream_output_ports={}, event_input_ports={}, event_output_ports={}, modechange_output_ports={}, links={})".format(name, factory, mode, stream_input_ports, stream_output_ports, event_input_ports, event_output_ports, modechange_output_ports, links), 0)
+        _str = append_lines(_str, "{}.setup()".format(component["name"]), 0)
         _str = append_lines(
             _str, "self.components.append({})".format(component["name"]), 0)
         _str = append_lines(_str, "{}.run()".format(component["name"]), 0)
