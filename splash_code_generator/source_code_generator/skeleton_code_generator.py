@@ -153,7 +153,7 @@ class SkeletonCodeGenerator:
 
     def __append_input_port(self, channel, user_callback_name):
         _str = ""
-        _str = "self.attach_input_port(String, \"{}\", {})".format(
+        _str = "self.attach_input_port(String, \"{}\", self.{})".format(
             channel, user_callback_name)
         return _str
 
