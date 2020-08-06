@@ -78,8 +78,14 @@ class SkeletonCodeGenerator:
         _str = append_lines(
             _str, "Generated automatically by Splash Code Generator for {}".format(component["name"]), 1)
         _str = append_lines(_str, "'''", 0)
+        _str = append_lines(_str, self.__import_message(), 0)
         _str = append_lines(_str, self.__import_scl(), 0)
         _str = append_lines(_str, self.__generate_class(component), 0)
+        return _str
+
+    def __import_message(self):
+        _str = ""
+        _str = append_lines(_str, "from std_msgs.msg import String", 0)
         return _str
 
     def __import_scl(self):
