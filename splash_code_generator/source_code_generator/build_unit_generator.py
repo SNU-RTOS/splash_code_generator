@@ -161,7 +161,7 @@ class BuildUnitGenerator:
 
         _str = append_lines(_str, "import rclpy", 0)
         _str = append_lines(
-            _str, "from rclpy.executor import MultiThreadedExecutor", 0)
+            _str, "from rclpy.executors import MultiThreadedExecutor", 0)
         return _str
 
     def __import_build_unit(self, name, class_name):
