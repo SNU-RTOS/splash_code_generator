@@ -127,7 +127,6 @@ class BuildUnitGenerator:
             _str, "Generated automatically by Splash Code Generator for {}".format(build_unit["name"]), 1)
         _str = append_lines(_str, "'''", 0)
         _str = append_lines(_str, self.__import_rcl(), 0)
-        _str = append_lines(_str, self.__import_scl_component_node(), 0)
         if(len(build_unit["processing_components"]) > 0):
             _str = append_lines(_str, self.__import_components(
                 build_unit["processing_components"]), 0)
@@ -171,13 +170,6 @@ class BuildUnitGenerator:
             _str, "from .splash.build_unit.{} import {}".format(name, class_name), 0)
         return _str
 
-    def __import_scl_component_node(self):
-        _str = ""
-
-        _str = append_lines(_str, "from scl import ComponentNode", 0)
-
-        return _str
-
     def __import_components(self, components):
         _str = ""
         for component in components:
@@ -193,7 +185,7 @@ class BuildUnitGenerator:
         _str = append_lines(_str, "executor = MultiThreadedExecutor()\n", 1)
         _str = append_lines(_str, "build_unit = {}()".format(
             build_unit["class_name"]), 1)
-        _str = append_lines(_str, "for node in build_unit.componentNodes:", 1)
+        _str = append_lines(_str, "for component in build_unit.components:", 1)
         _str = append_lines(_str, "executor.add_node(node)", 2)
         _str = append_lines(_str, "executor.spin()", 1)
         _str = append_lines(_str, "rclpy.shutdown()", 1)
@@ -204,7 +196,7 @@ class BuildUnitGenerator:
         _str = append_lines(_str, "class {}():".format(
             build_unit["class_name"]), 0)
         _str = append_lines(_str, "def __init__(self):", 1)
-        _str = append_lines(_str, "self.componentNodes = []", 2)
+        _str = append_lines(_str, "self.components = []", 2)
         for component in build_unit["processing_components"]:
             _str = append_lines(
                 _str, self.__generate_lines_for_component(component), 2)
@@ -246,8 +238,6 @@ class BuildUnitGenerator:
         _str = append_lines(
             _str, "{}.set_info(factory=\"{}\",mode=\"{}\", stream_input_ports={}, stream_output_ports={}, event_input_ports={}, event_output_ports={}, modechange_output_ports={})".format(name, factory, mode, stream_input_ports, stream_output_ports, event_input_ports, event_output_ports, modechange_output_ports), 0)
         _str = append_lines(
-            _str, "{0}_node = ComponentNode({0})".format(component["name"]), 0)
-        _str = append_lines(
-            _str, "self.componentNodes.append({}_node)".format(component["name"]), 0)
+            _str, "self.components.append({})".format(component["name"]), 0)
         _str = append_lines(_str, "{}.run()".format(component["name"]), 0)
         return _str

@@ -84,7 +84,7 @@ class SkeletonCodeGenerator:
 
     def __import_scl(self):
         _str = ""
-        _str = append_lines(_str, "from scl import Component", 0)
+        _str = append_lines(_str, "from scl.component import Component", 0)
         return _str
 
     def __generate_class(self, component):
