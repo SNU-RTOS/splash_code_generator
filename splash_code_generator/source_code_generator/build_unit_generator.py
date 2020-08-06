@@ -168,7 +168,7 @@ class BuildUnitGenerator:
         _str = ""
 
         _str = append_lines(
-            _str, "from .splash.{} import {}".format(name, class_name), 0)
+            _str, "from .splash.build_unit.{} import {}".format(name, class_name), 0)
         return _str
 
     def __import_scl_component_node(self):
@@ -182,7 +182,7 @@ class BuildUnitGenerator:
         _str = ""
         for component in components:
             _str = append_lines(
-                _str, "from ..{} import {}".format(component["name"], component["class_name"]), 0)
+                _str, "from ..component.{} import {}".format(component["name"], component["class_name"]), 0)
 
         return _str
 

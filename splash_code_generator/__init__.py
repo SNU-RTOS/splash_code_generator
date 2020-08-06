@@ -36,10 +36,10 @@ class CodeGenerator():
                 os.makedirs(self.__splash_dir)
         except OSError as e:
             print(e)
-        # make __init__.py in splash
-        file_path = os.path.join(self.__splash_dir, "__init__.py")
-        with open(file_path, "w") as f:
-            f.write("")
+        # # make __init__.py in splash
+        # file_path = os.path.join(self.__splash_dir, "__init__.py")
+        # with open(file_path, "w") as f:
+        #     f.write("")
         # make __init__.py in splash/build_unit
         self.__locate_build_unit_source_code("__init__", "")
         # make __init__.py in spalsh/component
