@@ -3,8 +3,9 @@ import copy
 
 
 class BuildUnitGenerator:
-    def __init__(self, node_data, link_data):
+    def __init__(self, pkg_name, node_data, link_data):
         node_data_cp = copy.deepcopy(node_data)
+        self.__pkg_name = pkg_name
         self.__processing_components = node_data_cp["processing_components"]
         self.__source_components = node_data_cp["source_components"]
         self.__sink_components = node_data_cp["sink_components"]
@@ -132,6 +133,13 @@ class BuildUnitGenerator:
                         return stream_port["Channel"]
         return None
 
+    def __find_event_name_for_input_port(self, input_port):
+        for link in self.__links:
+            if(link["to"] == input_port["key"]):
+                for output_port in self.__event_output_ports:
+                    return output_port["Event"]
+        return None
+
     def __generate_build_unit(self, key, name="", class_name=""):
         build_unit = {}
         build_unit["name"] = name if name else "default_build_unit"
@@ -178,6 +186,7 @@ class BuildUnitGenerator:
             _str, "Generated automatically by Splash Code Generator for {}".format(build_unit["name"]), 1)
         _str = append_lines(_str, "'''", 0)
         _str = append_lines(_str, self.__import_rcl(), 0)
+        _str = append_lines(_str, self.__import_srvs(), 0)
         if(len(build_unit["processing_components"]) > 0):
             _str = append_lines(_str, self.__import_components(
                 build_unit["processing_components"]), 0)
@@ -200,6 +209,12 @@ class BuildUnitGenerator:
         _str = append_lines(
             _str, "Generated automatically by Splash Code Generator for {}".format(build_unit["name"]), 1)
         _str = append_lines(_str, "'''", 0)
+        # # temp
+
+        # _str = append_lines(_str, "import sys", 0)
+        # _str = append_lines(
+        #     _str, "sys.path.append(\"C:/Workspace/rtos/Splash/ClientLibraries\")", 0)
+        # # temp end
         _str = append_lines(_str, self.__import_rcl(), 0)
         _str = append_lines(
             _str, self.__import_build_unit(build_unit["name"], build_unit["class_name"]), 0)
@@ -212,6 +227,15 @@ class BuildUnitGenerator:
         _str = append_lines(_str, "import rclpy", 0)
         _str = append_lines(
             _str, "from rclpy.executors import MultiThreadedExecutor", 0)
+        return _str
+
+    def __import_srvs(self):
+        _str = ""
+        for event_port in self.__event_input_ports:
+
+            event_name = self.__find_event_name_for_input_port(event_port)
+            _str = _str + "from {}_interfaces.srv import {}\n".format(
+                self.__pkg_name, CamelCaseConverter(event_name).__str__())
         return _str
 
     def __import_build_unit(self, name, class_name):
@@ -295,8 +319,18 @@ class BuildUnitGenerator:
             component["name"], component["class_name"]), 0)
         _str = append_lines(
             _str, "{}.set_info(factory=\"{}\",mode=\"{}\", stream_input_ports={}, stream_output_ports={}, event_input_ports={}, event_output_ports={}, modechange_output_ports={}, links={})".format(name, factory, mode, stream_input_ports, stream_output_ports, event_input_ports, event_output_ports, modechange_output_ports, links), 0)
+        _str = append_lines(_str, self.__register_event_callback(
+            component["name"], event_input_ports), 0)
         _str = append_lines(_str, "{}.setup()".format(component["name"]), 0)
         _str = append_lines(
             _str, "self.components.append({})".format(component["name"]), 0)
         _str = append_lines(_str, "{}.run()".format(component["name"]), 0)
+        return _str
+
+    def __register_event_callback(self, component_name, event_input_ports):
+        _str = ""
+        for event_port in event_input_ports:
+            event_name = self.__find_event_name_for_input_port(event_port)
+            _str = _str + "{}.register_event_callback({}, \"{}\", {}.{}_callback)".format(
+                component_name, CamelCaseConverter(event_name).__str__(), event_name, component_name, event_name.lower().replace(" ", "_"))
         return _str

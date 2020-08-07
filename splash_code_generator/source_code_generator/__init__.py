@@ -2,20 +2,17 @@ import re
 
 from .build_unit_generator import BuildUnitGenerator
 from .skeleton_code_generator import SkeletonCodeGenerator
-
-
-def camel(match):
-    return match.group(1) + match.group(2).upper()
+from .__util import *
 
 
 class SourceCodeGenerator:
-    def __init__(self, json):
+    def __init__(self, pkg_name, json):
         node_data_list = json["nodeDataArray"]
         link_data_list = json["linkDataArray"]
         node_data_parsed = self.__parse_node_data(node_data_list)
 
         self.buildUnitGenerator = BuildUnitGenerator(
-            node_data_parsed, link_data_list)
+            pkg_name, node_data_parsed, link_data_list)
         self.skeletonCodeGenerator = SkeletonCodeGenerator(
             node_data_parsed, link_data_list)
 
@@ -36,14 +33,11 @@ class SourceCodeGenerator:
         event_output_ports = []
         modechange_input_ports = []
         modechange_output_ports = []
-        snake_to_camel_reg = r"(.*?)_([a-zA-Z0-9])"
         for node in node_data_list:
             category = node["category"]
             node["name"] = node["key"].lower().replace(" ", "_")
 
-            class_name = re.sub(
-                snake_to_camel_reg, camel, node["name"], 0)
-            class_name = class_name[0:1].upper() + class_name[1:]
+            class_name = CamelCaseConverter(node["name"]).__str__()
             node["class_name"] = class_name
 
             if(category == "processingComponent"):
