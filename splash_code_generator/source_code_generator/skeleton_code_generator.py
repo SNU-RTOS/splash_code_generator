@@ -141,8 +141,8 @@ class SkeletonCodeGenerator:
         for input_port in component["event_input_ports"]:
             event_name = self.__find_event_name_for_input_port(input_port)
             _str = append_lines(
-                _str, "def {}_callback(self, event):".format(event_name.lower().replace(" ", "_")), 0)
-            _str = append_lines(_str, "pass\n", 1)
+                _str, "def {}_callback(self, event, response):".format(event_name.lower().replace(" ", "_")), 0)
+            _str = append_lines(_str, "return response\n", 1)
         return _str
 
     def __generate_run(self):
