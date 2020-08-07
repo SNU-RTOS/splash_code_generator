@@ -1,3 +1,6 @@
+import re
+
+
 def append_lines(string, lines, indent):
     line_list = lines.split('\n')
     for line in line_list:
@@ -67,3 +70,16 @@ def __simplify_port(port):
         pass
 
     return port
+
+
+class CamelCaseConverter:
+    def __init__(self, string):
+        self.__reg = r"(.*?)_([a-zA-Z0-9])"
+        name = re.sub(self.__reg, self.__camel, string, 0)
+        self.__name = name[0:1].upper() + name[1:]
+
+    def __camel(self, match):
+        return match.group(1) + match.group(2).upper()
+
+    def __str__(self):
+        return self.__name
