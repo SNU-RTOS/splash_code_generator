@@ -2,7 +2,7 @@ from .ros_package_generator import ROSPackageGenerator
 from .json_parser import JsonParser
 from .source_code_generator import SourceCodeGenerator
 from .source_code_validator import SourceCodeValidator
-from .source_code_generator.__util import append_lines
+from .source_code_generator.__util import append_lines, CamelCaseConverter
 
 import os
 
@@ -14,13 +14,15 @@ class CodeGenerator():
         jsonParser = JsonParser(args.file)
         json_parsed = jsonParser.parse()
 
-        self.__sourceCodeGenerator = SourceCodeGenerator(json_parsed)
+        self.__sourceCodeGenerator = SourceCodeGenerator(
+            args.name, json_parsed)
 
         self.__sourceCodeValidator = SourceCodeValidator()
 
         self.__pkg_name = args.name
         self.__pkg_path = os.path.join(args.path, 'src', args.name)
-
+        self.__interface_pkg_path = os.path.join(
+            args.path, 'src', args.name+'_interfaces')
         self.__node_dir = os.path.join(self.__pkg_path, self.__pkg_name)
 
         self.__splash_dir = os.path.join(self.__node_dir, "splash")
@@ -45,6 +47,7 @@ class CodeGenerator():
         # make __init__.py in spalsh/component
         self.__locate_skeleton_source_code("__init__", "")
         self.__generate_setup_py(self.source_code["build_units"])
+        self.__generate_srvs(self.source_code["build_units"])
         for build_unit in self.source_code["build_units"]:
             # locate source code for each build unit in splash/build_unit
             self.__locate_build_unit_source_code(
@@ -94,6 +97,108 @@ class CodeGenerator():
         _str = append_lines(_str, ")", 0)
         # make __init__.py in splash
         file_path = os.path.join(self.__pkg_path, "setup.py")
+        with open(file_path, "w") as f:
+            f.write(_str)
+
+    def __generate_srvs(self, build_units):
+        srv_dir = os.path.join(self.__interface_pkg_path, "srv")
+        try:
+            if not(os.path.isdir(srv_dir)):
+                os.makedirs(srv_dir)
+        except OSError as e:
+            print(e)
+        srv_str = "# Auto-generated srv file by Splash Code Generator\n"
+        srv_str = srv_str + "---\n"
+        srv_str = srv_str + "bool success\n"
+        event_list = []
+        for build_unit in build_units:
+            for component in build_unit["processing_components"]:
+                for event_port in component["event_output_ports"]:
+                    event_name = CamelCaseConverter(
+                        event_port["Event"]).__str__()
+                    event_list.append(event_name)
+                    file_path = os.path.join(
+                        srv_dir, event_name+".srv")
+                    with open(file_path, "w") as f:
+                        f.write(srv_str)
+        self.__generate_interfaces_xml()
+        self.__generate_interfaces_cmake(event_list)
+
+    def __generate_interfaces_xml(self):
+        _str = ""
+        _str = append_lines(_str, "<?xml version=\"1.0\"?>", 0)
+        _str = append_lines(
+            _str, "<?xml-model href=\"http://download.ros.org/schema/package_format3.xsd\" schematypens=\"http://www.w3.org/2001/XMLSchema\"?>", 0)
+        _str = append_lines(_str, "<package format=\"3\">", 0)
+        _str = append_lines(
+            _str, "<name>{}_interfaces</name>".format(self.__pkg_name), 1)
+        _str = append_lines(_str, "<version>0.0.0</version>", 1)
+        _str = append_lines(
+            _str, "<description>TODO: Package description</description>", 1)
+        _str = append_lines(
+            _str, "<maintainer email=\"you@email.com\">Your name</maintainer>", 1)
+        _str = append_lines(
+            _str, "<license>TODO: License declaration</license>", 1)
+
+        _str = append_lines(
+            _str, "<buildtool_depend>ament_cmake</buildtool_depend>", 1)
+        _str = append_lines(
+            _str, "<buildtool_depend>rosidl_default_generators</buildtool_depend>", 1)
+        _str = append_lines(
+            _str, "<exec_depend>rosidl_default_runtime</exec_depend>", 1)
+        _str = append_lines(
+            _str, "<member_of_group>rosidl_interface_packages</member_of_group>", 1)
+        _str = append_lines(
+            _str, "<test_depend>ament_lint_auto</test_depend>", 1)
+        _str = append_lines(
+            _str, "<test_depend>ament_lint_common</test_depend>", 1)
+        _str = append_lines(_str, "<export>", 1)
+        _str = append_lines(_str, "<build_type>ament_cmake</build_type>", 2)
+        _str = append_lines(_str, "</export>", 1)
+        _str = append_lines(_str, "</package>", 0)
+
+        file_path = os.path.join(self.__interface_pkg_path, "package.xml")
+
+        with open(file_path, "w") as f:
+            f.write(_str)
+
+    def __generate_interfaces_cmake(self, event_list):
+        _str = ""
+        _str = append_lines(_str, "cmake_minimum_required(VERSION 3.5)", 0)
+        _str = append_lines(_str, "project(test_pkg_interfaces)", 0)
+        _str = append_lines(_str, "# Default to C99", 0)
+        _str = append_lines(_str, "if(NOT CMAKE_C_STANDARD)", 0)
+        _str = append_lines(_str, "set(CMAKE_C_STANDARD 99)", 1)
+        _str = append_lines(_str, "endif()", 0)
+
+        _str = append_lines(_str, "# Default to C++14", 0)
+        _str = append_lines(_str, "if(NOT CMAKE_CXX_STANDARD)", 0)
+        _str = append_lines(_str, "set(CMAKE_CXX_STANDARD 14)", 1)
+        _str = append_lines(_str, "endif()", 0)
+
+        _str = append_lines(
+            _str, "if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES \"Clang\")", 0)
+        _str = append_lines(
+            _str, "add_compile_options(-Wall -Wextra -Wpedantic)", 1)
+        _str = append_lines(_str, "endif()", 0)
+
+        _str = append_lines(_str, "# find dependencies", 0)
+        _str = append_lines(_str, "find_package(ament_cmake REQUIRED)", 0)
+        _str = append_lines(
+            _str, "find_package(rosidl_default_generators REQUIRED)", 0)
+
+        _str = append_lines(
+            _str, "rosidl_generate_interfaces(${PROJECT_NAME}", 0)
+        for event in event_list:
+            _str = append_lines(_str, "\"srv/{}.srv\"".format(event), 1)
+        _str = append_lines(_str, ")", 0)
+
+        _str = append_lines(
+            _str, "ament_export_dependencies(rosidl_default_runtime)", 0)
+        _str = append_lines(_str, "ament_package()", 0)
+
+        file_path = os.path.join(self.__interface_pkg_path, "CMakeLists.txt")
+
         with open(file_path, "w") as f:
             f.write(_str)
 
