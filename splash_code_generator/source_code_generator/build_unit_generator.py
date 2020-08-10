@@ -209,12 +209,12 @@ class BuildUnitGenerator:
         _str = append_lines(
             _str, "Generated automatically by Splash Code Generator for {}".format(build_unit["name"]), 1)
         _str = append_lines(_str, "'''", 0)
-        # # temp
+        # temp
 
-        # _str = append_lines(_str, "import sys", 0)
-        # _str = append_lines(
-        #     _str, "sys.path.append(\"C:/Workspace/rtos/Splash/ClientLibraries\")", 0)
-        # # temp end
+        _str = append_lines(_str, "import sys", 0)
+        _str = append_lines(
+            _str, "sys.path.append(\"C:/Workspace/rtos/Splash/ClientLibraries\")", 0)
+        # temp end
         _str = append_lines(_str, self.__import_rcl(), 0)
         _str = append_lines(
             _str, self.__import_build_unit(build_unit["name"], build_unit["class_name"]), 0)

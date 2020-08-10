@@ -95,10 +95,12 @@ class SkeletonCodeGenerator:
 
     def __generate_class(self, component):
         _str = ""
-        if(component["category"] == "fusionOperator"]):
-            _str = append_lines(_str, "class {}(FusionOperator):".format(component["class_name"]), 0)
+        if(component["category"] == "fusionOperator"):
+            _str = append_lines(_str, "class {}(FusionOperator):".format(
+                component["class_name"]), 0)
         else:
-            _str = append_lines(_str, "class {}(Component):".format(component["class_name"]), 0)
+            _str = append_lines(_str, "class {}(Component):".format(
+                component["class_name"]), 0)
         _str = append_lines(_str, self.__generate_init(component), 1)
         _str = append_lines(_str, self.__generate_setup(component), 1)
         _str = append_lines(_str, self.__generate_run(), 1)
@@ -108,54 +110,54 @@ class SkeletonCodeGenerator:
         return _str
 
     def __generate_init(self, component):
-        _str=""
-        _str=append_lines(_str, "def __init__(self):", 0)
-        _str=append_lines(
+        _str = ""
+        _str = append_lines(_str, "def __init__(self):", 0)
+        _str = append_lines(
             _str, "super().__init__(\"{}\")".format(component["name"]), 1)
         return _str
 
     def __generate_setup(self, component):
-        _str=""
-        _str=append_lines(_str, "def setup(self):", 0)
-        count=1
+        _str = ""
+        _str = append_lines(_str, "def setup(self):", 0)
+        count = 1
         for input_port in component["stream_input_ports"]:
-            channel=self.__find_channel_name_for_input_port(input_port)
-            _str=append_lines(_str, self.__append_input_port(
+            channel = self.__find_channel_name_for_input_port(input_port)
+            _str = append_lines(_str, self.__append_input_port(
                 channel, "user_callback_{}".format(count)), 1)
-            count=count + 1
+            count = count + 1
         for output_port in component["stream_output_ports"]:
-            channel=output_port["Channel"]
-            _str=append_lines(_str, self.__append_output_port(channel), 1)
+            channel = output_port["Channel"]
+            _str = append_lines(_str, self.__append_output_port(channel), 1)
         return _str
 
     def __generate_user_callbacks(self, component):
-        _str=""
-        count=1
+        _str = ""
+        count = 1
         for input_port in component["stream_input_ports"]:
-            _str=append_lines(
+            _str = append_lines(
                 _str, "def user_callback_{}(self, msg, channel_name):".format(count), 0)
-            _str=append_lines(_str, "pass\n", 1)
-            count=count + 1
+            _str = append_lines(_str, "pass\n", 1)
+            count = count + 1
         return _str
 
     def __generate_event_callbacks(self, component):
-        _str=""
+        _str = ""
         for input_port in component["event_input_ports"]:
-            event_name=self.__find_event_name_for_input_port(input_port)
-            _str=append_lines(
+            event_name = self.__find_event_name_for_input_port(input_port)
+            _str = append_lines(
                 _str, "def {}_callback(self, event, response):".format(event_name.lower().replace(" ", "_")), 0)
-            _str=append_lines(_str, "return response\n", 1)
+            _str = append_lines(_str, "return response\n", 1)
         return _str
 
     def __generate_run(self):
-        _str=""
-        _str=append_lines(_str, "def run(self):", 0)
-        _str=append_lines(_str, "pass", 1)
+        _str = ""
+        _str = append_lines(_str, "def run(self):", 0)
+        _str = append_lines(_str, "pass", 1)
         return _str
 
     def __append_input_port(self, channel, user_callback_name):
-        _str=""
-        _str="self.attach_input_port(String, \"{}\", self.{})".format(
+        _str = ""
+        _str = "self.attach_input_port(String, \"{}\", self.{})".format(
             channel, user_callback_name)
         return _str
 
@@ -176,6 +178,6 @@ class SkeletonCodeGenerator:
         return None
 
     def __append_output_port(self, channel):
-        _str=""
-        _str="self.attach_output_port(String, \"{}\")".format(channel)
+        _str = ""
+        _str = "self.attach_output_port(String, \"{}\")".format(channel)
         return _str
