@@ -331,6 +331,6 @@ class BuildUnitGenerator:
         _str = ""
         for event_port in event_input_ports:
             event_name = self.__find_event_name_for_input_port(event_port)
-            _str = _str + "{}.register_event_callback({}, \"{}\", {}.{}_callback)".format(
+            _str = _str + "{}.attach_event_input_port({}, \"{}\", {}.{}_callback)".format(
                 component_name, CamelCaseConverter(event_name).__str__(), event_name, component_name, event_name.lower().replace(" ", "_"))
         return _str
