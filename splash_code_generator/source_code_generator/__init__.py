@@ -1,7 +1,9 @@
 import re
 
 from .build_unit_generator import BuildUnitGenerator
+from .factory_generator import FactoryGenerator
 from .skeleton_code_generator import SkeletonCodeGenerator
+
 from ._util import *
 
 
@@ -13,13 +15,15 @@ class SourceCodeGenerator:
 
         self.buildUnitGenerator = BuildUnitGenerator(
             pkg_name, node_data_parsed, link_data_list)
+        self.factoryGenerator = FactoryGenerator(node_data_parsed["factories"])
         self.skeletonCodeGenerator = SkeletonCodeGenerator(
             node_data_parsed, link_data_list)
 
     def generate(self):
         build_units = self.buildUnitGenerator.generate()
+        factories = self.factoryGenerator.generate()
         skeletons = self.skeletonCodeGenerator.generate()
-        return {"build_units": build_units, "skeletons": skeletons}
+        return {"build_units": build_units, "factories": factories, "skeletons": skeletons}
 
     def _parse_node_data(self, node_data_list):
         processing_components = []

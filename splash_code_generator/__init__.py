@@ -44,10 +44,13 @@ class CodeGenerator():
             f.write("")
         # make __init__.py in splash/build_unit
         self._locate_build_unit_source_code("__init__", "")
+        # make __init__.py in splash/factory
+        self._locate_factory_source_code("__init__", "")
         # make __init__.py in spalsh/component
         self._locate_skeleton_source_code("__init__", "")
         self._generate_setup_py(self.source_code["build_units"])
         self._generate_srvs(self.source_code["build_units"])
+
         for build_unit in self.source_code["build_units"]:
             # locate source code for each build unit in splash/build_unit
             self._locate_build_unit_source_code(
@@ -55,6 +58,12 @@ class CodeGenerator():
             # locate exec code for each build unit in node_dir
             self._locate_build_unit_exec_code(
                 build_unit["name"], build_unit["exec_code"])
+
+        for factory in self.source_code["factories"]:
+            # locate skeleton source code in splash/component
+            self._locate_factory_source_code(
+                factory["name"], factory["source_code"])
+
         for skeleton in self.source_code["skeletons"]:
             # locate skeleton source code in splash/component
             self._locate_skeleton_source_code(
@@ -215,6 +224,17 @@ class CodeGenerator():
 
     def _locate_build_unit_exec_code(self, name, code):
         file_path = os.path.join(self._node_dir, name+"_exec.py")
+        with open(file_path, "w") as f:
+            f.write(code)
+
+    def _locate_factory_source_code(self, name, code):
+        factory_dir = os.path.join(self._splash_dir, "factory")
+        try:
+            if not(os.path.isdir(factory_dir)):
+                os.makedirs(factory_dir)
+        except OSError as e:
+            print(e)
+        file_path = os.path.join(factory_dir, name+".py")
         with open(file_path, "w") as f:
             f.write(code)
 
