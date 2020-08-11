@@ -2,7 +2,7 @@ from .ros_package_generator import ROSPackageGenerator
 from .json_parser import JsonParser
 from .source_code_generator import SourceCodeGenerator
 from .source_code_validator import SourceCodeValidator
-from .source_code_generator.__util import append_lines, CamelCaseConverter
+from .source_code_generator._util import append_lines, CamelCaseConverter
 
 import os
 
@@ -14,70 +14,70 @@ class CodeGenerator():
         jsonParser = JsonParser(args.file)
         json_parsed = jsonParser.parse()
 
-        self.__sourceCodeGenerator = SourceCodeGenerator(
+        self._sourceCodeGenerator = SourceCodeGenerator(
             args.name, json_parsed)
 
-        self.__sourceCodeValidator = SourceCodeValidator()
+        self._sourceCodeValidator = SourceCodeValidator()
 
-        self.__pkg_name = args.name
-        self.__pkg_path = os.path.join(args.path, 'src', args.name)
-        self.__interface_pkg_path = os.path.join(
+        self._pkg_name = args.name
+        self._pkg_path = os.path.join(args.path, 'src', args.name)
+        self._interface_pkg_path = os.path.join(
             args.path, 'src', args.name+'_interfaces')
-        self.__node_dir = os.path.join(self.__pkg_path, self.__pkg_name)
+        self._node_dir = os.path.join(self._pkg_path, self._pkg_name)
 
-        self.__splash_dir = os.path.join(self.__node_dir, "splash")
+        self._splash_dir = os.path.join(self._node_dir, "splash")
 
         self.source_code = None
 
     def generate(self):
-        self.source_code = self.__sourceCodeGenerator.generate()
+        self.source_code = self._sourceCodeGenerator.generate()
 
         # make splash dir
         try:
-            if not(os.path.isdir(self.__splash_dir)):
-                os.makedirs(self.__splash_dir)
+            if not(os.path.isdir(self._splash_dir)):
+                os.makedirs(self._splash_dir)
         except OSError as e:
             print(e)
         # make __init__.py in splash
-        file_path = os.path.join(self.__splash_dir, "__init__.py")
+        file_path = os.path.join(self._splash_dir, "__init__.py")
         with open(file_path, "w") as f:
             f.write("")
         # make __init__.py in splash/build_unit
-        self.__locate_build_unit_source_code("__init__", "")
+        self._locate_build_unit_source_code("__init__", "")
         # make __init__.py in spalsh/component
-        self.__locate_skeleton_source_code("__init__", "")
-        self.__generate_setup_py(self.source_code["build_units"])
-        self.__generate_srvs(self.source_code["build_units"])
+        self._locate_skeleton_source_code("__init__", "")
+        self._generate_setup_py(self.source_code["build_units"])
+        self._generate_srvs(self.source_code["build_units"])
         for build_unit in self.source_code["build_units"]:
             # locate source code for each build unit in splash/build_unit
-            self.__locate_build_unit_source_code(
+            self._locate_build_unit_source_code(
                 build_unit["name"], build_unit["source_code"])
             # locate exec code for each build unit in node_dir
-            self.__locate_build_unit_exec_code(
+            self._locate_build_unit_exec_code(
                 build_unit["name"], build_unit["exec_code"])
         for skeleton in self.source_code["skeletons"]:
             # locate skeleton source code in splash/component
-            self.__locate_skeleton_source_code(
+            self._locate_skeleton_source_code(
                 skeleton["name"], skeleton["source_code"])
 
     def validate(self):
         if(self.source_code):
-            self.validation = self.__sourceCodeValidator.validate(
+            self.validation = self._sourceCodeValidator.validate(
                 self.source_code)
         else:
             print("Source code not generated yet")
 
-    def __generate_setup_py(self, build_units):
+    def _generate_setup_py(self, build_units):
         _str = ""
         console_scripts = []
         for build_unit in build_units:
             console_scripts.append("{0} = {1}.{0}_exec:main".format(
-                build_unit["name"], self.__pkg_name))
+                build_unit["name"], self._pkg_name))
         _str = append_lines(
             _str, "from setuptools import setup, find_packages", 0)
         _str = append_lines(_str, "", 0)
         _str = append_lines(
-            _str, "package_name = '{}'".format(self.__pkg_name), 0)
+            _str, "package_name = '{}'".format(self._pkg_name), 0)
         _str = append_lines(_str, "setup(", 0)
         _str = append_lines(_str, "name=package_name,", 1)
         _str = append_lines(_str, "version='0.0.0',", 1)
@@ -96,12 +96,12 @@ class CodeGenerator():
             _str, "entry_points={{'console_scripts': {0},}},".format(console_scripts), 1)
         _str = append_lines(_str, ")", 0)
         # make __init__.py in splash
-        file_path = os.path.join(self.__pkg_path, "setup.py")
+        file_path = os.path.join(self._pkg_path, "setup.py")
         with open(file_path, "w") as f:
             f.write(_str)
 
-    def __generate_srvs(self, build_units):
-        srv_dir = os.path.join(self.__interface_pkg_path, "srv")
+    def _generate_srvs(self, build_units):
+        srv_dir = os.path.join(self._interface_pkg_path, "srv")
         try:
             if not(os.path.isdir(srv_dir)):
                 os.makedirs(srv_dir)
@@ -121,17 +121,17 @@ class CodeGenerator():
                         srv_dir, event_name+".srv")
                     with open(file_path, "w") as f:
                         f.write(srv_str)
-        self.__generate_interfaces_xml()
-        self.__generate_interfaces_cmake(event_list)
+        self._generate_interfaces_xml()
+        self._generate_interfaces_cmake(event_list)
 
-    def __generate_interfaces_xml(self):
+    def _generate_interfaces_xml(self):
         _str = ""
         _str = append_lines(_str, "<?xml version=\"1.0\"?>", 0)
         _str = append_lines(
             _str, "<?xml-model href=\"http://download.ros.org/schema/package_format3.xsd\" schematypens=\"http://www.w3.org/2001/XMLSchema\"?>", 0)
         _str = append_lines(_str, "<package format=\"3\">", 0)
         _str = append_lines(
-            _str, "<name>{}_interfaces</name>".format(self.__pkg_name), 1)
+            _str, "<name>{}_interfaces</name>".format(self._pkg_name), 1)
         _str = append_lines(_str, "<version>0.0.0</version>", 1)
         _str = append_lines(
             _str, "<description>TODO: Package description</description>", 1)
@@ -157,12 +157,12 @@ class CodeGenerator():
         _str = append_lines(_str, "</export>", 1)
         _str = append_lines(_str, "</package>", 0)
 
-        file_path = os.path.join(self.__interface_pkg_path, "package.xml")
+        file_path = os.path.join(self._interface_pkg_path, "package.xml")
 
         with open(file_path, "w") as f:
             f.write(_str)
 
-    def __generate_interfaces_cmake(self, event_list):
+    def _generate_interfaces_cmake(self, event_list):
         _str = ""
         _str = append_lines(_str, "cmake_minimum_required(VERSION 3.5)", 0)
         _str = append_lines(_str, "project(test_pkg_interfaces)", 0)
@@ -197,13 +197,13 @@ class CodeGenerator():
             _str, "ament_export_dependencies(rosidl_default_runtime)", 0)
         _str = append_lines(_str, "ament_package()", 0)
 
-        file_path = os.path.join(self.__interface_pkg_path, "CMakeLists.txt")
+        file_path = os.path.join(self._interface_pkg_path, "CMakeLists.txt")
 
         with open(file_path, "w") as f:
             f.write(_str)
 
-    def __locate_build_unit_source_code(self, name, code):
-        build_unit_dir = os.path.join(self.__splash_dir, "build_unit")
+    def _locate_build_unit_source_code(self, name, code):
+        build_unit_dir = os.path.join(self._splash_dir, "build_unit")
         try:
             if not(os.path.isdir(build_unit_dir)):
                 os.makedirs(build_unit_dir)
@@ -213,13 +213,13 @@ class CodeGenerator():
         with open(file_path, "w") as f:
             f.write(code)
 
-    def __locate_build_unit_exec_code(self, name, code):
-        file_path = os.path.join(self.__node_dir, name+"_exec.py")
+    def _locate_build_unit_exec_code(self, name, code):
+        file_path = os.path.join(self._node_dir, name+"_exec.py")
         with open(file_path, "w") as f:
             f.write(code)
 
-    def __locate_skeleton_source_code(self, name, code):
-        skeleton_dir = os.path.join(self.__splash_dir, "component")
+    def _locate_skeleton_source_code(self, name, code):
+        skeleton_dir = os.path.join(self._splash_dir, "component")
         try:
             if not(os.path.isdir(skeleton_dir)):
                 os.makedirs(skeleton_dir)

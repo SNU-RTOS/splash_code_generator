@@ -2,14 +2,14 @@ import re
 
 from .build_unit_generator import BuildUnitGenerator
 from .skeleton_code_generator import SkeletonCodeGenerator
-from .__util import *
+from ._util import *
 
 
 class SourceCodeGenerator:
     def __init__(self, pkg_name, json):
         node_data_list = json["nodeDataArray"]
         link_data_list = json["linkDataArray"]
-        node_data_parsed = self.__parse_node_data(node_data_list)
+        node_data_parsed = self._parse_node_data(node_data_list)
 
         self.buildUnitGenerator = BuildUnitGenerator(
             pkg_name, node_data_parsed, link_data_list)
@@ -21,7 +21,7 @@ class SourceCodeGenerator:
         skeletons = self.skeletonCodeGenerator.generate()
         return {"build_units": build_units, "skeletons": skeletons}
 
-    def __parse_node_data(self, node_data_list):
+    def _parse_node_data(self, node_data_list):
         processing_components = []
         source_components = []
         sink_components = []

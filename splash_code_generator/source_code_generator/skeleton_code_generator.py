@@ -1,30 +1,30 @@
-from .__util import *
+from ._util import *
 import copy
 
 
 class SkeletonCodeGenerator:
     def __init__(self, node_data, link_data_list):
         node_data_cp = copy.deepcopy(node_data)
-        self.__processing_components = node_data_cp["processing_components"]
-        self.__source_components = node_data_cp["source_components"]
-        self.__sink_components = node_data_cp["sink_components"]
-        self.__fusion_operators = node_data_cp["fusion_operators"]
-        self.__factories = node_data_cp["factories"]
-        self.__build_units = node_data_cp["build_units"]
-        self.__stream_ports = node_data_cp["stream_ports"]
-        self.__event_input_ports = node_data_cp["event_input_ports"]
-        self.__event_output_ports = node_data_cp["event_output_ports"]
-        self.__modechange_input_ports = node_data_cp["modechange_input_ports"]
-        self.__modechange_output_ports = node_data_cp["modechange_output_ports"]
-        self.__links = link_data_list
+        self._processing_components = node_data_cp["processing_components"]
+        self._source_components = node_data_cp["source_components"]
+        self._sink_components = node_data_cp["sink_components"]
+        self._fusion_operators = node_data_cp["fusion_operators"]
+        self._factories = node_data_cp["factories"]
+        self._build_units = node_data_cp["build_units"]
+        self._stream_ports = node_data_cp["stream_ports"]
+        self._event_input_ports = node_data_cp["event_input_ports"]
+        self._event_output_ports = node_data_cp["event_output_ports"]
+        self._modechange_input_ports = node_data_cp["modechange_input_ports"]
+        self._modechange_output_ports = node_data_cp["modechange_output_ports"]
+        self._links = link_data_list
 
     def generate(self):
         skeletons = []
-        not_assigned_stream_ports = self.__stream_ports
-        not_assigned_event_input_ports = self.__event_input_ports
-        not_assigned_event_output_ports = self.__event_output_ports
-        not_assigned_modechange_output_ports = self.__modechange_output_ports
-        for component in self.__processing_components:
+        not_assigned_stream_ports = self._stream_ports
+        not_assigned_event_input_ports = self._event_input_ports
+        not_assigned_event_output_ports = self._event_output_ports
+        not_assigned_modechange_output_ports = self._modechange_output_ports
+        for component in self._processing_components:
             not_assigned_stream_ports = relate_stream_ports(
                 component, not_assigned_stream_ports)
             not_assigned_event_input_ports = relate_event_input_ports(
@@ -33,8 +33,8 @@ class SkeletonCodeGenerator:
                 component, not_assigned_event_output_ports)
             not_assigned_modechange_output_ports = relate_modechange_output_ports(
                 component, not_assigned_modechange_output_ports)
-            skeletons.append(self.__generate_skeleton(component))
-        for component in self.__source_components:
+            skeletons.append(self._generate_skeleton(component))
+        for component in self._source_components:
             not_assigned_stream_ports = relate_stream_ports(
                 component, not_assigned_stream_ports)
             not_assigned_event_input_ports = relate_event_input_ports(
@@ -43,8 +43,8 @@ class SkeletonCodeGenerator:
                 component, not_assigned_event_output_ports)
             not_assigned_modechange_output_ports = relate_modechange_output_ports(
                 component, not_assigned_modechange_output_ports)
-            skeletons.append(self.__generate_skeleton(component))
-        for component in self.__sink_components:
+            skeletons.append(self._generate_skeleton(component))
+        for component in self._sink_components:
             not_assigned_stream_ports = relate_stream_ports(
                 component, not_assigned_stream_ports)
             not_assigned_event_input_ports = relate_event_input_ports(
@@ -53,8 +53,8 @@ class SkeletonCodeGenerator:
                 component, not_assigned_event_output_ports)
             not_assigned_modechange_output_ports = relate_modechange_output_ports(
                 component, not_assigned_modechange_output_ports)
-            skeletons.append(self.__generate_skeleton(component))
-        for component in self.__fusion_operators:
+            skeletons.append(self._generate_skeleton(component))
+        for component in self._fusion_operators:
             not_assigned_stream_ports = relate_stream_ports(
                 component, not_assigned_stream_ports)
             not_assigned_event_input_ports = relate_event_input_ports(
@@ -63,37 +63,37 @@ class SkeletonCodeGenerator:
                 component, not_assigned_event_output_ports)
             not_assigned_modechange_output_ports = relate_modechange_output_ports(
                 component, not_assigned_modechange_output_ports)
-            skeletons.append(self.__generate_skeleton(component))
+            skeletons.append(self._generate_skeleton(component))
         return skeletons
 
-    def __generate_skeleton(self, component):
+    def _generate_skeleton(self, component):
         skeleton = {}
         skeleton["name"] = component["name"]
-        skeleton["source_code"] = self.__generate_source_code(component)
+        skeleton["source_code"] = self._generate_source_code(component)
         return skeleton
 
-    def __generate_source_code(self, component):
+    def _generate_source_code(self, component):
         _str = ""
         _str = append_lines(_str, "'''", 0)
         _str = append_lines(
             _str, "Generated automatically by Splash Code Generator for {}".format(component["name"]), 1)
         _str = append_lines(_str, "'''", 0)
-        _str = append_lines(_str, self.__import_message(), 0)
-        _str = append_lines(_str, self.__import_scl(), 0)
-        _str = append_lines(_str, self.__generate_class(component), 0)
+        _str = append_lines(_str, self._import_message(), 0)
+        _str = append_lines(_str, self._import_scl(), 0)
+        _str = append_lines(_str, self._generate_class(component), 0)
         return _str
 
-    def __import_message(self):
+    def _import_message(self):
         _str = ""
         _str = append_lines(_str, "from std_msgs.msg import String", 0)
         return _str
 
-    def __import_scl(self):
+    def _import_scl(self):
         _str = ""
-        _str = append_lines(_str, "from scl.components import Component", 0)
+        _str = append_lines(_str, "from scl.components import *", 0)
         return _str
 
-    def __generate_class(self, component):
+    def _generate_class(self, component):
         _str = ""
         if(component["category"] == "fusionOperator"):
             _str = append_lines(_str, "class {}(FusionOperator):".format(
@@ -101,36 +101,48 @@ class SkeletonCodeGenerator:
         else:
             _str = append_lines(_str, "class {}(Component):".format(
                 component["class_name"]), 0)
-        _str = append_lines(_str, self.__generate_init(component), 1)
-        _str = append_lines(_str, self.__generate_setup(component), 1)
-        _str = append_lines(_str, self.__generate_run(), 1)
-        _str = append_lines(_str, self.__generate_user_callbacks(component), 1)
+        _str = append_lines(_str, self._generate_init(component), 1)
+        _str = append_lines(_str, self._generate_setup(component), 1)
+        _str = append_lines(_str, self._generate_run(), 1)
+        _str = append_lines(_str, self._generate_user_callbacks(component), 1)
         _str = append_lines(
-            _str, self.__generate_event_callbacks(component), 1)
+            _str, self._generate_event_callbacks(component), 1)
         return _str
 
-    def __generate_init(self, component):
+    def _generate_init(self, component):
         _str = ""
         _str = append_lines(_str, "def __init__(self):", 0)
         _str = append_lines(
             _str, "super().__init__(\"{}\")".format(component["name"]), 1)
         return _str
 
-    def __generate_setup(self, component):
+    def _generate_setup(self, component):
         _str = ""
         _str = append_lines(_str, "def setup(self):", 0)
-        count = 1
-        for input_port in component["stream_input_ports"]:
-            channel = self.__find_channel_name_for_input_port(input_port)
-            _str = append_lines(_str, self.__append_input_port(
-                channel, "user_callback_{}".format(count)), 1)
-            count = count + 1
+        if(component["category"] == "fusionOperator"):
+            for input_port in component["stream_input_ports"]:
+                channel = self._find_channel_name_for_input_port(input_port)
+                _str = append_lines(
+                    _str, self._append_input_port_for_fusion(channel), 1)
+        else:
+            count = 1
+            for input_port in component["stream_input_ports"]:
+                channel = self._find_channel_name_for_input_port(input_port)
+
+                _str = append_lines(_str, self._append_input_port(
+                    channel, "user_callback_{}".format(count)), 1)
+                count = count + 1
         for output_port in component["stream_output_ports"]:
             channel = output_port["Channel"]
-            _str = append_lines(_str, self.__append_output_port(channel), 1)
+            if(component["category"] == "fusionOperator"):
+                _str = append_lines(
+                    _str, self._append_output_port_for_fusion(channel), 1)
+            else:
+                _str = append_lines(
+                    _str, self._append_output_port(channel), 1)
         return _str
 
-    def __generate_user_callbacks(self, component):
+    def _generate_user_callbacks(self, component):
         _str = ""
         count = 1
         for input_port in component["stream_input_ports"]:
@@ -140,44 +152,55 @@ class SkeletonCodeGenerator:
             count = count + 1
         return _str
 
-    def __generate_event_callbacks(self, component):
+    def _generate_event_callbacks(self, component):
         _str = ""
         for input_port in component["event_input_ports"]:
-            event_name = self.__find_event_name_for_input_port(input_port)
+            event_name = self._find_event_name_for_input_port(input_port)
             _str = append_lines(
                 _str, "def {}_callback(self, event, response):".format(event_name.lower().replace(" ", "_")), 0)
             _str = append_lines(_str, "return response\n", 1)
         return _str
 
-    def __generate_run(self):
+    def _generate_run(self):
         _str = ""
         _str = append_lines(_str, "def run(self):", 0)
         _str = append_lines(_str, "pass", 1)
         return _str
 
-    def __append_input_port(self, channel, user_callback_name):
+    def _append_input_port(self, channel, user_callback_name):
         _str = ""
-        _str = "self.attach_input_port(String, \"{}\", self.{})".format(
+        _str = "self.attach_stream_input_port(String, \"{}\", self.{})".format(
             channel, user_callback_name)
         return _str
 
-    def __find_channel_name_for_input_port(self, input_port):
-        for link in self.__links:
+    def _append_input_port_for_fusion(self, channel):
+        _str = ""
+        _str = "self.attach_stream_input_port(String, \"{}\")".format(
+            channel)
+        return _str
+
+    def _find_channel_name_for_input_port(self, input_port):
+        for link in self._links:
             if(link["to"] == input_port["key"]):
-                for stream_port in self.__stream_ports:
+                for stream_port in self._stream_ports:
                     if(stream_port["PORT_TYPE"] == "STREAM_OUTPUT_PORT" and stream_port["key"] == link["from"]):
                         return stream_port["Channel"]
         return None
 
-    def __find_event_name_for_input_port(self, input_port):
-        for link in self.__links:
+    def _find_event_name_for_input_port(self, input_port):
+        for link in self._links:
             if(link["to"] == input_port["key"]):
-                for event_port in self.__event_output_ports:
+                for event_port in self._event_output_ports:
                     if(event_port["key"] == link["from"]):
                         return event_port["Event"]
         return None
 
-    def __append_output_port(self, channel):
+    def _append_output_port(self, channel):
         _str = ""
-        _str = "self.attach_output_port(String, \"{}\")".format(channel)
+        _str = "self.attach_stream_output_port(String, \"{}\")".format(channel)
+        return _str
+
+    def _append_output_port_for_fusion(self, channel):
+        _str = ""
+        _str = "self.attach_stream_output_port(\"{}\")".format(channel)
         return _str
