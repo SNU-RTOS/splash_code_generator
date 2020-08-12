@@ -46,6 +46,8 @@ class CodeGenerator():
         self._locate_build_unit_source_code("__init__", "")
         # make __init__.py in splash/factory
         self._locate_factory_source_code("__init__", "")
+        # make __init__.py in splash/stream_port
+        self._locate_stream_port_source_code("__init__", "")
         # make __init__.py in spalsh/component
         self._locate_skeleton_source_code("__init__", "")
         self._generate_setup_py(self.source_code["build_units"])
@@ -59,8 +61,13 @@ class CodeGenerator():
             self._locate_build_unit_exec_code(
                 build_unit["name"], build_unit["exec_code"])
 
+        for port in self.source_code["stream_ports"]:
+            # locate source code for each port in splash/port
+            self._locate_stream_port_source_code(
+                "__init__", port["source_code"])
+
         for factory in self.source_code["factories"]:
-            # locate skeleton source code in splash/component
+            # locate source code for each factory in splash/factory
             self._locate_factory_source_code(
                 factory["name"], factory["source_code"])
 
@@ -236,6 +243,17 @@ class CodeGenerator():
             print(e)
         file_path = os.path.join(factory_dir, name+".py")
         with open(file_path, "w") as f:
+            f.write(code)
+
+    def _locate_stream_port_source_code(self, name, code):
+        stream_port_dir = os.path.join(self._splash_dir, "stream_port")
+        try:
+            if not(os.path.isdir(stream_port_dir)):
+                os.makedirs(stream_port_dir)
+        except OSError as e:
+            print(e)
+        file_path = os.path.join(stream_port_dir, name+".py")
+        with open(file_path, "a" if code else "w") as f:
             f.write(code)
 
     def _locate_skeleton_source_code(self, name, code):

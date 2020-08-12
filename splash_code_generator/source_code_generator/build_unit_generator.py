@@ -30,19 +30,20 @@ class BuildUnitGenerator:
         factory_set = set()
         for factory in self._factories:
             for component in self._processing_components:
-                if "group" in component.keys() and factory["key"] in component["group"]:
+                if "group" in component.keys() and factory["key"] == component["group"]:
                     factory_set.add(factory["key"])
             for component in self._source_components:
-                if "group" in component.keys() and factory["key"] in component["group"]:
+                if "group" in component.keys() and factory["key"] == component["group"]:
                     factory_set.add(factory["key"])
             for component in self._sink_components:
-                if "group" in component.keys() and factory["key"] in component["group"]:
+                if "group" in component.keys() and factory["key"] == component["group"]:
                     factory_set.add(factory["key"])
             for component in self._fusion_operators:
-                if "group" in component.keys() and factory["key"] in component["group"]:
+                if "group" in component.keys() and factory["key"] == component["group"]:
                     factory_set.add(factory["key"])
         self._factories = [
             factory for factory in self._factories if factory["key"] in factory_set]
+
         for component in self._processing_components:
             not_assigned_stream_ports = relate_stream_ports(
                 component, not_assigned_stream_ports)
@@ -201,9 +202,8 @@ class BuildUnitGenerator:
             _str, "Generated automatically by Splash Code Generator for {}".format(build_unit["name"]), 1)
         _str = append_lines(_str, "'''", 0)
         _str = append_lines(_str, self._import_rcl(), 0)
+        _str = append_lines(_str, self._import_scl(), 0)
         _str = append_lines(_str, self._import_srvs(), 0)
-        if(len(self._factories) > 0):
-            _str = append_lines(_str, self._import_factories(), 0)
         if(len(build_unit["processing_components"]) > 0):
             _str = append_lines(_str, self._import_components(
                 build_unit["processing_components"]), 0)
@@ -216,6 +216,8 @@ class BuildUnitGenerator:
         if(len(build_unit["fusion_operators"]) > 0):
             _str = append_lines(_str, self._import_components(
                 build_unit["fusion_operators"]), 0)
+
+        _str = append_lines(_str, self._import_stream_ports(), 0)
         _str = append_lines(
             _str, self._generate_build_unit_class(build_unit), 0)
         return _str
@@ -244,6 +246,13 @@ class BuildUnitGenerator:
         _str = append_lines(_str, "import rclpy", 0)
         _str = append_lines(
             _str, "from rclpy.executors import MultiThreadedExecutor", 0)
+        return _str
+
+    def _import_scl(self):
+        _str = ""
+
+        _str = append_lines(_str, "from scl.link import Link", 0)
+
         return _str
 
     def _import_srvs(self):
@@ -275,6 +284,12 @@ class BuildUnitGenerator:
         for factory in self._factories:
             _str = append_lines(
                 _str, "from ..factory.{} import {}".format(factory["name"], factory["class_name"]), 0)
+
+        return _str
+
+    def _import_stream_ports(self):
+        _str = ""
+        _str = append_lines(_str, "from ..stream_port import *", 0)
 
         return _str
 
@@ -316,40 +331,40 @@ class BuildUnitGenerator:
         name = ""
         factory = "None"
         mode = ""
-        stream_input_ports = []
-        stream_output_ports = []
-        event_input_ports = []
-        event_output_ports = []
-        modechange_output_ports = []
         name = component["name"]
         if "group" in component.keys():
             factory = "{}()".format(
                 CamelCaseConverter(component["group"]).__str__())
             mode = component["mode"]
+        links = []
         input_ports = component["stream_input_ports"]
         output_ports = component["stream_output_ports"]
         event_input_ports = component["event_input_ports"]
-        event_output_ports = component["event_output_ports"]
-        modechange_output_ports = component["modechange_output_ports"]
-        links = []
         for link in self._links_transparent:
             for input_port in input_ports:
                 if input_port["key"] == link["to"]["key"]:
-                    links.append(link)
+                    _from = CamelCaseConverter(link["from"]["key"]).__str__()
+                    _to = CamelCaseConverter(link["to"]["key"]).__str__()
+                    _channel = link["to"]["channel"]
+                    links.append("Link({}(), {}(), \"{}\")".format(
+                        _from, _to, _channel))
             for output_port in output_ports:
                 if output_port["key"] == link["from"]["key"]:
-                    links.append(link)
+                    _from = CamelCaseConverter(link["from"]["key"]).__str__()
+                    _to = CamelCaseConverter(link["to"]["key"]).__str__()
+                    _channel = link["from"]["channel"]
+                    links.append("Link({}(), {}(), \"{}\")".format(
+                        _from, _to, _channel))
         _str = append_lines(_str, "{} = {}()".format(
             component["name"], component["class_name"]), 0)
+        links_str = str(links).replace("\'", "")
 
+        _str = append_lines(_str, "{}.set_links(links={})".format(
+            name, links_str), 0)
         if component["category"] == "fusionOperator":
             fusion_rule = component["fusionRule"]
-            _str = append_lines(_str, "{}.set_info(factory={}, mode=\"{}\", stream_input_ports={}, stream_output_ports={}, event_input_ports={}, event_output_ports={}, modechange_output_ports={}, links={}, fusion_rule={})".format(
-                name, factory, mode, stream_input_ports, stream_output_ports, event_input_ports, event_output_ports, modechange_output_ports, links, fusion_rule), 0)
-        else:
-            _str = append_lines(_str, "{}.set_info(factory={}, mode=\"{}\", stream_input_ports={}, stream_output_ports={}, event_input_ports={}, event_output_ports={}, modechange_output_ports={}, links={})".format(
-                name, factory, mode, stream_input_ports, stream_output_ports, event_input_ports, event_output_ports, modechange_output_ports, links), 0)
-
+            _str = append_lines(
+                _str, "{}.set_fusion_rule(fusion_rule={})".format(name, fusion_rule), 0)
         _str = append_lines(_str, self._register_event_callback(
             component["name"], event_input_ports), 0)
         _str = append_lines(_str, "{}.setup()".format(component["name"]), 0)

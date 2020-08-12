@@ -33,6 +33,7 @@ class SkeletonCodeGenerator:
                 component, not_assigned_event_output_ports)
             not_assigned_modechange_output_ports = relate_modechange_output_ports(
                 component, not_assigned_modechange_output_ports)
+            component["factory"] = relate_factory(component, self._factories)
             skeletons.append(self._generate_skeleton(component))
         for component in self._source_components:
             not_assigned_stream_ports = relate_stream_ports(
@@ -43,6 +44,7 @@ class SkeletonCodeGenerator:
                 component, not_assigned_event_output_ports)
             not_assigned_modechange_output_ports = relate_modechange_output_ports(
                 component, not_assigned_modechange_output_ports)
+            component["factory"] = relate_factory(component, self._factories)
             skeletons.append(self._generate_skeleton(component))
         for component in self._sink_components:
             not_assigned_stream_ports = relate_stream_ports(
@@ -53,6 +55,7 @@ class SkeletonCodeGenerator:
                 component, not_assigned_event_output_ports)
             not_assigned_modechange_output_ports = relate_modechange_output_ports(
                 component, not_assigned_modechange_output_ports)
+            component["factory"] = relate_factory(component, self._factories)
             skeletons.append(self._generate_skeleton(component))
         for component in self._fusion_operators:
             not_assigned_stream_ports = relate_stream_ports(
@@ -63,6 +66,7 @@ class SkeletonCodeGenerator:
                 component, not_assigned_event_output_ports)
             not_assigned_modechange_output_ports = relate_modechange_output_ports(
                 component, not_assigned_modechange_output_ports)
+            component["factory"] = relate_factory(component, self._factories)
             skeletons.append(self._generate_skeleton(component))
         return skeletons
 
@@ -80,12 +84,21 @@ class SkeletonCodeGenerator:
         _str = append_lines(_str, "'''", 0)
         _str = append_lines(_str, self._import_message(), 0)
         _str = append_lines(_str, self._import_scl(), 0)
+        if component["factory"]:
+            _str = append_lines(_str, self._import_factory(component), 0)
         _str = append_lines(_str, self._generate_class(component), 0)
         return _str
 
     def _import_message(self):
         _str = ""
         _str = append_lines(_str, "from std_msgs.msg import String", 0)
+        return _str
+
+    def _import_factory(self, component):
+        _str = ""
+        factory = component["factory"]
+        _str = append_lines(_str, "from ..factory.{} import {}".format(
+            factory["name"], factory["class_name"]), 0)
         return _str
 
     def _import_scl(self):
@@ -112,8 +125,12 @@ class SkeletonCodeGenerator:
     def _generate_init(self, component):
         _str = ""
         _str = append_lines(_str, "def __init__(self):", 0)
+        factory = component["factory"]["class_name"] + \
+            "()" if component["factory"] else None
+        mode = "\"{}\"".format(component["factory"]["mode"]) if "mode" in component.keys(
+        ) else None
         _str = append_lines(
-            _str, "super().__init__(\"{}\")".format(component["name"]), 1)
+            _str, "super().__init__(name=\"{}\", factory={}, mode={})".format(component["name"], factory, mode), 1)
         return _str
 
     def _generate_setup(self, component):

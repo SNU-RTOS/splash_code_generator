@@ -61,6 +61,13 @@ def relate_modechange_output_ports(component, modechange_output_ports):
     return new_modechange_port
 
 
+def relate_factory(component, factories):
+    for factory in factories:
+        if "group" in component.keys() and component["group"] == factory["key"]:
+            return factory
+    return None
+
+
 def __simplify_port(port):
     try:
         del port['category']

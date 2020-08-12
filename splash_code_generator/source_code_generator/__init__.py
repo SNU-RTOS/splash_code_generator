@@ -3,7 +3,7 @@ import re
 from .build_unit_generator import BuildUnitGenerator
 from .factory_generator import FactoryGenerator
 from .skeleton_code_generator import SkeletonCodeGenerator
-
+from .stream_port_generator import StreamPortGenerator
 from ._util import *
 
 
@@ -16,14 +16,18 @@ class SourceCodeGenerator:
         self.buildUnitGenerator = BuildUnitGenerator(
             pkg_name, node_data_parsed, link_data_list)
         self.factoryGenerator = FactoryGenerator(node_data_parsed["factories"])
+        self.streamPortGenerator = StreamPortGenerator(
+            node_data_parsed["stream_ports"])
         self.skeletonCodeGenerator = SkeletonCodeGenerator(
             node_data_parsed, link_data_list)
 
     def generate(self):
         build_units = self.buildUnitGenerator.generate()
         factories = self.factoryGenerator.generate()
+        stream_ports = self.streamPortGenerator.generate()
         skeletons = self.skeletonCodeGenerator.generate()
-        return {"build_units": build_units, "factories": factories, "skeletons": skeletons}
+
+        return {"build_units": build_units, "factories": factories, "stream_ports": stream_ports, "skeletons": skeletons}
 
     def _parse_node_data(self, node_data_list):
         processing_components = []
