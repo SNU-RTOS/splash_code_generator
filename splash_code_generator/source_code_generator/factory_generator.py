@@ -17,7 +17,7 @@ class FactoryGenerator:
         _factory = {}
         _factory["name"] = factory["name"]
         _factory["class_name"] = factory["class_name"]
-        _factory["mode_configuration"] = factory["mode_configuration"]
+        _factory["mode_configuration"] = factory["mode_configuration"] if "mode_configuration" in factory.keys() else None
         _factory["parent"] = factory["group"] if "group" in factory.keys() else None
         _factory["mode"] = factory["mode"].lower().replace(
             " ", "_") if "mode" in factory.keys() else None
@@ -51,5 +51,8 @@ class FactoryGenerator:
             _str, "class {}(Factory):".format(factory["class_name"]), 0)
         _str = append_lines(_str, "def __init__(self):", 1)
         _str = append_lines(
-            _str, "super().__init__(name=\"{}\", parent={}, mode_configuration={}, mode=\"{}\")".format(factory["name"], parent, factory["mode_configuration"], mode), 2)
+            _str, "super().__init__(name=\"{}\", parent={}, mode=\"{}\")".format(factory["name"], parent, mode), 2)
+        if factory["mode_configuration"]:
+            _str = append_lines(_str, "self.set_mode_configuration({}).".format(
+                factory["mode_configuration"]), 2)
         return _str
