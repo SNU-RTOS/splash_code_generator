@@ -127,7 +127,7 @@ class SkeletonCodeGenerator:
         _str = append_lines(_str, "def __init__(self):", 0)
         factory = component["factory"]["class_name"] + \
             "()" if component["factory"] else None
-        mode = "\"{}\"".format(component["factory"]["mode"]) if "mode" in component.keys(
+        mode = "\"{}\"".format(component["mode"]) if "mode" in component.keys(
         ) else None
         _str = append_lines(
             _str, "super().__init__(name=\"{}\", factory={}, mode={})".format(component["name"], factory, mode), 1)
