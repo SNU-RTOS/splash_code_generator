@@ -53,6 +53,6 @@ class FactoryGenerator:
         _str = append_lines(
             _str, "super().__init__(name=\"{}\", parent={}, mode=\"{}\")".format(factory["name"], parent, mode), 2)
         if factory["mode_configuration"]:
-            _str = append_lines(_str, "self.set_mode_configuration({}).".format(
+            _str = append_lines(_str, "self.set_mode_configuration({})".format(
                 factory["mode_configuration"]), 2)
         return _str
