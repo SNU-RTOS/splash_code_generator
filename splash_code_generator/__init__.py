@@ -39,6 +39,10 @@ class CodeGenerator():
         except OSError as e:
             print(e)
         # make __init__.py in splash
+        file_path = os.path.join(self._node_dir, "__init__.py")
+        with open(file_path, "w") as f:
+            f.write(self._generate_splash_server_source_code())
+        # make __init__.py in splash
         file_path = os.path.join(self._splash_dir, "__init__.py")
         with open(file_path, "w") as f:
             f.write("")
@@ -82,13 +86,21 @@ class CodeGenerator():
                 self.source_code)
         else:
             print("Source code not generated yet")
-
+    def _generate_splash_server_source_code(self):
+        _str = ""
+        _str = append_lines(_str, "import sys", 0)
+        _str = append_lines(_str, "sys.path.append(\"C:/Workspace/rtos/Splash/RuntimeLibraries\")", 0)
+        _str = append_lines(_str, "import srl", 0)
+        _str = append_lines(_str, "def main():", 0)
+        _str = append_lines(_str, "srl.run()", 1)
+        return _str
     def _generate_setup_py(self, build_units):
         _str = ""
-        console_scripts = []
+        console_scripts = ["splash_server = {}.__init__:main".format(self._pkg_name)]
         for build_unit in build_units:
             console_scripts.append("{0} = {1}.{0}_exec:main".format(
                 build_unit["name"], self._pkg_name))
+        
         _str = append_lines(
             _str, "from setuptools import setup, find_packages", 0)
         _str = append_lines(_str, "", 0)
@@ -111,7 +123,6 @@ class CodeGenerator():
         _str = append_lines(
             _str, "entry_points={{'console_scripts': {0},}},".format(console_scripts), 1)
         _str = append_lines(_str, ")", 0)
-        # make __init__.py in splash
         file_path = os.path.join(self._pkg_path, "setup.py")
         with open(file_path, "w") as f:
             f.write(_str)
@@ -127,6 +138,26 @@ class CodeGenerator():
         srv_str = srv_str + "---\n"
         srv_str = srv_str + "bool success\n"
         event_list = []
+        file_path_rm = os.path.join(srv_dir, "RegisterMode.srv")
+        with open(file_path_rm, "w") as f:
+            srv_str_rm = "# Auto-generated srv file by Splash Code Generator\n"
+            srv_str_rm = srv_str_rm + "string factory\n"
+            srv_str_rm = srv_str_rm + "string mode_configuration\n"
+            srv_str_rm = srv_str_rm + "---\n"
+            srv_str_rm = srv_str_rm + "bool ok\n"
+            f.write(srv_str_rm)
+        event_list.append("RegisterMode")
+
+        file_path_rmc = os.path.join(srv_dir, "RequestModeChange.srv")
+        with open(file_path_rmc, "w") as f:
+            srv_str_rmc = "# Auto-generated srv file by Splash Code Generator\n"
+            srv_str_rmc = srv_str_rmc + "string factory\n"
+            srv_str_rmc = srv_str_rmc + "string event\n"
+            srv_str_rmc = srv_str_rmc + "---\n"
+            srv_str_rmc = srv_str_rmc + "bool ok\n"
+            f.write(srv_str_rmc)
+        event_list.append("RequestModeChange")
+
         for build_unit in build_units:
             for component in build_unit["processing_components"]:
                 for event_port in component["event_output_ports"]:

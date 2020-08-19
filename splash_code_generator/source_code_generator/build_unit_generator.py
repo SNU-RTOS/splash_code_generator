@@ -234,7 +234,6 @@ class BuildUnitGenerator:
         # _str = append_lines(
         #     _str, "sys.path.append(\"C:/Workspace/rtos/Splash/ClientLibraries\")", 0)
         # # temp end
-        _str = append_lines(_str, self._import_rcl(), 0)
         _str = append_lines(
             _str, self._import_build_unit(build_unit["name"], build_unit["class_name"]), 0)
         _str = append_lines(_str, self._generate_main(build_unit), 0)
@@ -252,7 +251,7 @@ class BuildUnitGenerator:
         _str = ""
 
         _str = append_lines(_str, "from scl.link import Link", 0)
-
+        _str = append_lines(_str, "from scl.build_unit import BuildUnit", 0)
         return _str
 
     def _import_srvs(self):
@@ -296,22 +295,16 @@ class BuildUnitGenerator:
     def _generate_main(self, build_unit):
         _str = ""
         _str = append_lines(_str, "def main(args=None):", 0)
-        _str = append_lines(_str, "rclpy.init(args=args)", 1)
-        _str = append_lines(_str, "executor = MultiThreadedExecutor()\n", 1)
-        _str = append_lines(_str, "build_unit = {}()".format(
-            build_unit["class_name"]), 1)
-        _str = append_lines(_str, "for component in build_unit.components:", 1)
-        _str = append_lines(_str, "executor.add_node(component)", 2)
-        _str = append_lines(_str, "executor.spin()", 1)
-        _str = append_lines(_str, "rclpy.shutdown()", 1)
+        _str = append_lines(_str, "build_unit = {}()".format(build_unit["class_name"]), 1)
+        _str = append_lines(_str, "build_unit.run()", 1)
         return _str
 
     def _generate_build_unit_class(self, build_unit):
         _str = ""
-        _str = append_lines(_str, "class {}():".format(
+        _str = append_lines(_str, "class {}(BuildUnit):".format(
             build_unit["class_name"]), 0)
         _str = append_lines(_str, "def __init__(self):", 1)
-        _str = append_lines(_str, "self.components = []", 2)
+        _str = append_lines(_str, "super().__init__()", 2)
         for component in build_unit["processing_components"]:
             _str = append_lines(
                 _str, self._generate_lines_for_component(component), 2)
@@ -361,6 +354,7 @@ class BuildUnitGenerator:
 
         _str = append_lines(_str, "{}.set_links(links={})".format(
             name, links_str), 0)
+        _str = append_lines(_str, "{}.set_build_unit(self)".format(name), 0)
         if component["category"] == "fusionOperator":
             fusion_rule = component["fusionRule"]
             _str = append_lines(
@@ -370,7 +364,6 @@ class BuildUnitGenerator:
         _str = append_lines(_str, "{}.setup()".format(component["name"]), 0)
         _str = append_lines(
             _str, "self.components.append({})".format(component["name"]), 0)
-        _str = append_lines(_str, "{}.run()".format(component["name"]), 0)
         return _str
 
     def _register_event_callback(self, component_name, event_input_ports):
