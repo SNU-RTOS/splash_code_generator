@@ -15,6 +15,8 @@ class StreamPortGenerator:
     def _generate_port(self, port):
         _port = {}
         _port["name"] = port["name"]
+        _port["rate"] = port["Rate"] if "Rate" in port.keys() else None
+        
         _port["type"] = port["PORT_TYPE"]
         _port["class_name"] = port["class_name"]
         _port["parent"] = port["group"]
@@ -59,4 +61,11 @@ class StreamPortGenerator:
         _str = append_lines(_str, "def __init__(self):", 1)
         _str = append_lines(
             _str, "super().__init__(name=\"{}\", parent={})".format(port["name"], parent), 2)
+        if port["rate"] and not self._rate_is_nan(port["rate"]):
+            _str = append_lines(_str, "self.set_rate_constraint({})".format(port["rate"]), 2)
+
         return _str
+    def _rate_is_nan(self, rate):
+        if type(rate) == int:
+            return False
+        return True

@@ -88,8 +88,8 @@ class CodeGenerator():
             print("Source code not generated yet")
     def _generate_splash_server_source_code(self):
         _str = ""
-        _str = append_lines(_str, "import sys", 0)
-        _str = append_lines(_str, "sys.path.append(\"C:/Workspace/rtos/Splash/RuntimeLibraries\")", 0)
+        # _str = append_lines(_str, "import sys", 0)
+        # _str = append_lines(_str, "sys.path.append(\"C:/Workspace/rtos/Splash/RuntimeLibraries\")", 0)
         _str = append_lines(_str, "import srl", 0)
         _str = append_lines(_str, "def main():", 0)
         _str = append_lines(_str, "srl.run()", 1)
@@ -138,25 +138,25 @@ class CodeGenerator():
         srv_str = srv_str + "---\n"
         srv_str = srv_str + "bool success\n"
         event_list = []
-        file_path_rm = os.path.join(srv_dir, "RegisterMode.srv")
-        with open(file_path_rm, "w") as f:
-            srv_str_rm = "# Auto-generated srv file by Splash Code Generator\n"
-            srv_str_rm = srv_str_rm + "string factory\n"
-            srv_str_rm = srv_str_rm + "string mode_configuration\n"
-            srv_str_rm = srv_str_rm + "---\n"
-            srv_str_rm = srv_str_rm + "bool ok\n"
-            f.write(srv_str_rm)
-        event_list.append("RegisterMode")
+        # file_path_rm = os.path.join(srv_dir, "RegisterMode.srv")
+        # with open(file_path_rm, "w") as f:
+        #     srv_str_rm = "# Auto-generated srv file by Splash Code Generator\n"
+        #     srv_str_rm = srv_str_rm + "string factory\n"
+        #     srv_str_rm = srv_str_rm + "string mode_configuration\n"
+        #     srv_str_rm = srv_str_rm + "---\n"
+        #     srv_str_rm = srv_str_rm + "bool ok\n"
+        #     f.write(srv_str_rm)
+        # event_list.append("RegisterMode")
 
-        file_path_rmc = os.path.join(srv_dir, "RequestModeChange.srv")
-        with open(file_path_rmc, "w") as f:
-            srv_str_rmc = "# Auto-generated srv file by Splash Code Generator\n"
-            srv_str_rmc = srv_str_rmc + "string factory\n"
-            srv_str_rmc = srv_str_rmc + "string event\n"
-            srv_str_rmc = srv_str_rmc + "---\n"
-            srv_str_rmc = srv_str_rmc + "bool ok\n"
-            f.write(srv_str_rmc)
-        event_list.append("RequestModeChange")
+        # file_path_rmc = os.path.join(srv_dir, "RequestModeChange.srv")
+        # with open(file_path_rmc, "w") as f:
+        #     srv_str_rmc = "# Auto-generated srv file by Splash Code Generator\n"
+        #     srv_str_rmc = srv_str_rmc + "string factory\n"
+        #     srv_str_rmc = srv_str_rmc + "string event\n"
+        #     srv_str_rmc = srv_str_rmc + "---\n"
+        #     srv_str_rmc = srv_str_rmc + "bool ok\n"
+        #     f.write(srv_str_rmc)
+        # event_list.append("RequestModeChange")
 
         for build_unit in build_units:
             for component in build_unit["processing_components"]:

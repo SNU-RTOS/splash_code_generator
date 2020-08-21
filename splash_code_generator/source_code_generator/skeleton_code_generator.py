@@ -117,7 +117,8 @@ class SkeletonCodeGenerator:
         _str = append_lines(_str, self._generate_init(component), 1)
         _str = append_lines(_str, self._generate_setup(component), 1)
         _str = append_lines(_str, self._generate_run(), 1)
-        _str = append_lines(_str, self._generate_user_callbacks(component), 1)
+        if(component["category"] != "fusionOperator"):
+            _str = append_lines(_str, self._generate_user_callbacks(component), 1)
         _str = append_lines(
             _str, self._generate_event_callbacks(component), 1)
         return _str
@@ -164,7 +165,7 @@ class SkeletonCodeGenerator:
         count = 1
         for input_port in component["stream_input_ports"]:
             _str = append_lines(
-                _str, "def user_callback_{}(self, msg, channel_name):".format(count), 0)
+                _str, "def user_callback_{}(self, msg):".format(count), 0)
             _str = append_lines(_str, "pass\n", 1)
             count = count + 1
         return _str
