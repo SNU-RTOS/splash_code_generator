@@ -3,7 +3,7 @@ import subprocess
 
 class ROSPackageGenerator:
     def __init__(self, name, path):
-        command = "ros2 pkg create --build-type ament_python %s --dependencies rclpy srl scl splash_interfaces %s_interfaces" % (
+        command = "ros2 pkg create --build-type ament_python %s --dependencies rclpy srl scl %s_interfaces" % (
             name, name)
 
         process = subprocess.Popen(command.split(), cwd=path + "/src",
