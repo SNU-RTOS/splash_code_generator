@@ -104,15 +104,16 @@ class SkeletonCodeGenerator:
     def _import_scl(self):
         _str = ""
         _str = append_lines(_str, "from scl.components import *", 0)
+        _str = append_lines(_str, "from scl.impl.singleton import Singleton", 0)
         return _str
 
     def _generate_class(self, component):
         _str = ""
         if(component["category"] == "fusionOperator"):
-            _str = append_lines(_str, "class {}(FusionOperator):".format(
+            _str = append_lines(_str, "class {}(FusionOperator, metaclass=Singleton):".format(
                 component["class_name"]), 0)
         else:
-            _str = append_lines(_str, "class {}(Component):".format(
+            _str = append_lines(_str, "class {}(Component, metaclass=Singleton):".format(
                 component["class_name"]), 0)
         _str = append_lines(_str, self._generate_init(component), 1)
         _str = append_lines(_str, self._generate_setup(component), 1)
