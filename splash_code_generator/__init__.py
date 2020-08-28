@@ -21,8 +21,8 @@ class CodeGenerator():
 
         self._pkg_name = args.name
         self._pkg_path = os.path.join(args.path, 'src', args.name)
-        self._interface_pkg_path = os.path.join(
-            args.path, 'src', args.name+'_interfaces')
+        # self._interface_pkg_path = os.path.join(
+        #     args.path, 'src', args.name+'_interfaces')
         self._node_dir = os.path.join(self._pkg_path, self._pkg_name)
 
         self._splash_dir = os.path.join(self._node_dir, "splash")
@@ -54,8 +54,9 @@ class CodeGenerator():
         self._locate_stream_port_source_code("__init__", "")
         # make __init__.py in spalsh/component
         self._locate_skeleton_source_code("__init__", "")
+        self._generate_launch(self.source_code["build_units"])
         self._generate_setup_py(self.source_code["build_units"])
-        self._generate_srvs(self.source_code["build_units"])
+        # self._generate_srvs(self.source_code["build_units"])
 
         for build_unit in self.source_code["build_units"]:
             # locate source code for each build unit in splash/build_unit
@@ -94,6 +95,28 @@ class CodeGenerator():
         _str = append_lines(_str, "def main():", 0)
         _str = append_lines(_str, "srl.run()", 1)
         return _str
+    def _generate_launch(self, build_units):
+        _str = ""
+        _str = append_lines(_str, "from launch import LaunchDescription", 0)
+        _str = append_lines(_str, "from launch_ros.actions import Node", 0)
+        _str = append_lines(_str, "def generate_launch_description():", 0)
+        _str = append_lines(_str, "return LaunchDescription([", 1) 
+        _str = append_lines(_str, "Node(package='{}', executable='splash_server'),".format(self._pkg_name), 2)
+        for build_unit in build_units:
+            _str = append_lines(_str, "Node(package='{}', executable='{}'),".format(self._pkg_name, build_unit["name"]), 2)
+        _str = append_lines(_str, "])", 1)
+
+        launch_dir = os.path.join(self._pkg_path, "launch")
+        try:
+            if not(os.path.isdir(launch_dir)):
+                os.makedirs(launch_dir)
+        except OSError as e:
+            print(e)
+
+        file_path = os.path.join(launch_dir, "splash.launch.py")
+        with open(file_path, "w") as f:
+            f.write(_str)
+
     def _generate_setup_py(self, build_units):
         _str = ""
         console_scripts = ["splash_server = {}.__init__:main".format(self._pkg_name)]
@@ -101,6 +124,8 @@ class CodeGenerator():
             console_scripts.append("{0} = {1}.{0}_exec:main".format(
                 build_unit["name"], self._pkg_name))
         
+        _str = append_lines(_str, "import os", 0)
+        _str = append_lines(_str, "from glob import glob", 0)
         _str = append_lines(
             _str, "from setuptools import setup, find_packages", 0)
         _str = append_lines(_str, "", 0)
@@ -111,7 +136,7 @@ class CodeGenerator():
         _str = append_lines(_str, "version='0.0.0',", 1)
         _str = append_lines(_str, "packages=find_packages(),", 1)
         _str = append_lines(
-            _str, "data_files=[('share/ament_index/resource_index/packages', ['resource/' + package_name]), ('share/' + package_name, ['package.xml']),],", 1)
+            _str, "data_files=[('share/ament_index/resource_index/packages', ['resource/' + package_name]), ('share/' + package_name, ['package.xml']), (os.path.join('share', package_name), glob('launch/*.launch.py'))],", 1)
         _str = append_lines(_str, "install_requires=['setuptools'],", 1)
         _str = append_lines(_str, "zip_safe=True,", 1)
         _str = append_lines(_str, "maintainer='TODO: Your name',", 1)
@@ -177,8 +202,8 @@ class CodeGenerator():
         _str = append_lines(
             _str, "<?xml-model href=\"http://download.ros.org/schema/package_format3.xsd\" schematypens=\"http://www.w3.org/2001/XMLSchema\"?>", 0)
         _str = append_lines(_str, "<package format=\"3\">", 0)
-        _str = append_lines(
-            _str, "<name>{}_interfaces</name>".format(self._pkg_name), 1)
+        # _str = append_lines(
+        #     _str, "<name>{}_interfaces</name>".format(self._pkg_name), 1)
         _str = append_lines(_str, "<version>0.0.0</version>", 1)
         _str = append_lines(
             _str, "<description>TODO: Package description</description>", 1)
@@ -212,7 +237,7 @@ class CodeGenerator():
     def _generate_interfaces_cmake(self, event_list):
         _str = ""
         _str = append_lines(_str, "cmake_minimum_required(VERSION 3.5)", 0)
-        _str = append_lines(_str, "project(test_pkg_interfaces)", 0)
+        # _str = append_lines(_str, "project(test_pkg_interfaces)", 0)
         _str = append_lines(_str, "# Default to C99", 0)
         _str = append_lines(_str, "if(NOT CMAKE_C_STANDARD)", 0)
         _str = append_lines(_str, "set(CMAKE_C_STANDARD 99)", 1)
