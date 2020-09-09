@@ -43,7 +43,6 @@ class BuildUnitGenerator:
                     factory_set.add(factory["key"])
         self._factories = [
             factory for factory in self._factories if factory["key"] in factory_set]
-
         for component in self._processing_components:
             not_assigned_stream_ports = relate_stream_ports(
                 component, not_assigned_stream_ports)
@@ -153,7 +152,8 @@ class BuildUnitGenerator:
         for link in self._links:
             if(link["to"] == input_port["key"]):
                 for output_port in self._event_output_ports:
-                    return output_port["Event"]
+                    if output_port["key"] == link["from"]:
+                        return output_port["Event"]
         return None
 
     def _generate_build_unit(self, key, name="", class_name=""):
