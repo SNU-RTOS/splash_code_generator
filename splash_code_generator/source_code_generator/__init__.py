@@ -69,7 +69,7 @@ class SourceCodeGenerator:
             elif(category == "modeChangeInputPort"):
                 modechange_input_ports.append(node)
             elif(category == "modeChangeOutputPort"):
-                modechange_output_ports.append(ndoe)
+                modechange_output_ports.append(node)
             else:
                 print("Error")
 
