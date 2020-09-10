@@ -333,6 +333,8 @@ class BuildUnitGenerator:
         input_ports = component["stream_input_ports"]
         output_ports = component["stream_output_ports"]
         event_input_ports = component["event_input_ports"]
+        event_output_ports = component["event_output_ports"]
+        modechange_output_ports = component["modechange_output_ports"]
         for link in self._links_transparent:
             for input_port in input_ports:
                 if input_port["key"] == link["to"]["key"]:
@@ -359,13 +361,17 @@ class BuildUnitGenerator:
             fusion_rule = component["fusionRule"]
             _str = append_lines(
                 _str, "{}.set_fusion_rule(fusion_rule={})".format(name, fusion_rule), 0)
-        _str = append_lines(_str, self._register_event_callback(
-            component["name"], event_input_ports), 0)
+        if len(event_input_ports) > 0:
+            _str = append_lines(_str, self._register_event_callback(component["name"], event_input_ports), 0)
+        if len(event_output_ports) > 0:
+            _str = append_lines(_str, self._attach_event_output_port(component["name"], event_output_ports), 0)
+        if len(modechange_output_ports) > 0:
+            _str = append_lines(_str, self._attach_modechange_output_port(component["name"], modechange_output_ports), 0)
         _str = append_lines(_str, "{}.setup()".format(component["name"]), 0)
         _str = append_lines(
             _str, "self.components.append({})".format(component["name"]), 0)
         return _str
-
+    
     def _register_event_callback(self, component_name, event_input_ports):
         _str = ""
         for event_port in event_input_ports:
@@ -373,3 +379,32 @@ class BuildUnitGenerator:
             _str = _str + "{0}.attach_event_input_port(\"{1}\", {0}.{2}_callback)".format(
                 component_name, event_name, event_name.lower().replace(" ", "_"))
         return _str
+    
+    def _attach_modechange_output_port(self, component_name, modechange_output_ports):
+        _str = ""
+        for modechange_output_port in modechange_output_ports:
+            factory_name = None
+            for link in self._links:
+                dest = None
+                if link["from"] == modechange_output_port["key"]:
+                    dest = link["to"]
+                    break
+            for modechange_input_port in self._modechange_input_ports:
+                if dest == modechange_input_port["key"]:
+                    factory_origin_name = modechange_input_port["group"]
+                    break
+            for factory in self._factories:
+                if factory_origin_name == factory["key"]:
+                    factory_name = factory["name"]
+                    break
+            _str = _str + "{0}.attach_modechange_output_port(\"{1}\")".format(component_name, factory_name)
+        return _str
+    
+
+    def _attach_event_output_port(self, component_name, event_output_ports):
+        _str = ""
+        for event_output_port in event_output_ports:
+            event = event_output_port["Event"]
+            _str = _str + "{0}.attach_event_output_port(\"{1}\")".format(component_name, event)
+        return _str
+            
