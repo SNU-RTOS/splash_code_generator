@@ -91,9 +91,9 @@ class CodeGenerator():
         _str = ""
         # _str = append_lines(_str, "import sys", 0)
         # _str = append_lines(_str, "sys.path.append(\"C:/Workspace/rtos/Splash/RuntimeLibraries\")", 0)
-        _str = append_lines(_str, "import srl", 0)
+        _str = append_lines(_str, "import scl", 0)
         _str = append_lines(_str, "def main():", 0)
-        _str = append_lines(_str, "srl.run()", 1)
+        _str = append_lines(_str, "scl.init()", 1)
         return _str
     def _generate_launch(self, build_units):
         _str = ""
