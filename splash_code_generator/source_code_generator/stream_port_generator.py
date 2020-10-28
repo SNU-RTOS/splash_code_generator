@@ -17,7 +17,7 @@ class StreamPortGenerator:
         _port["name"] = port["name"]
         _port["rate"] = port["Rate"] if "Rate" in port.keys() else None
         
-        _port["type"] = port["PORT_TYPE"]
+        _port["type"] = port["port_type"]
         _port["class_name"] = port["class_name"]
         _port["parent"] = port["group"]
         _port["source_code"] = self._generate_source_code(_port)

@@ -244,14 +244,14 @@ class SkeletonCodeGenerator:
         for link in self._links:
             if(link["to"] == input_port["key"]):
                 for stream_port in self._stream_ports:
-                    if(stream_port["PORT_TYPE"] == "STREAM_OUTPUT_PORT" and stream_port["key"] == link["from"]):
+                    if(stream_port["port_type"] == "STREAM_OUTPUT_PORT" and stream_port["key"] == link["from"]):
                         return stream_port
         return None
     def _find_channel_name_for_input_port(self, input_port):
         for link in self._links:
             if(link["to"] == input_port["key"]):
                 for stream_port in self._stream_ports:
-                    if(stream_port["PORT_TYPE"] == "STREAM_OUTPUT_PORT" and stream_port["key"] == link["from"]):
+                    if(stream_port["port_type"] == "STREAM_OUTPUT_PORT" and stream_port["key"] == link["from"]):
                         return stream_port["Channel"]
         return None
 

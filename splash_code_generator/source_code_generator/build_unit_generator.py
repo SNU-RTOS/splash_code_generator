@@ -98,7 +98,7 @@ class BuildUnitGenerator:
                 key = ""
                 factory = ""
                 mode = ""
-                if port["PORT_TYPE"] == "STREAM_OUTPUT_PORT" and port["key"] == link["from"]:
+                if port["port_type"] == "STREAM_OUTPUT_PORT" and port["key"] == link["from"]:
                     parent = next(
                         (component for component in self._processing_components if component["key"] == port["group"]), False)
                     if not parent:
@@ -116,7 +116,7 @@ class BuildUnitGenerator:
                     new_link["from"] = {
                         "key": port["key"], "parent": {"key": key, "factory": factory, "mode": mode}, "channel": port["Channel"]}
 
-                elif port["PORT_TYPE"] == "STREAM_INPUT_PORT" and port["key"] == link["to"]:
+                elif port["port_type"] == "STREAM_INPUT_PORT" and port["key"] == link["to"]:
                     parent = next(
                         (component for component in self._processing_components if component["key"] == port["group"]), False)
                     if not parent:
@@ -144,7 +144,7 @@ class BuildUnitGenerator:
         for link in self._links:
             if(link["to"] == input_port["key"]):
                 for stream_port in self._stream_ports:
-                    if(stream_port["PORT_TYPE"] == "STREAM_OUTPUT_PORT" and stream_port["key"] == link["from"]):
+                    if(stream_port["port_type"] == "STREAM_OUTPUT_PORT" and stream_port["key"] == link["from"]):
                         return stream_port["Channel"]
         return None
 

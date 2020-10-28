@@ -11,7 +11,7 @@ def main():
     args = parser.parse_args()
     code_generator = CodeGenerator(args)
     code_generator.generate()
-    code_generator.validate()
+    code_generator.save()
 
 
 if __name__ == '__main__':
