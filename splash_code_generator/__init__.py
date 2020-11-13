@@ -9,6 +9,9 @@ import os, json
 
 class CodeGenerator():
     def __init__(self, args):
+        if(args.update):
+            print('update')
+            return
         rosPackageGenerator = ROSPackageGenerator(args.name, args.path)
 
         jsonParser = JsonParser(args.file)
@@ -29,7 +32,6 @@ class CodeGenerator():
         self._splash_dir = os.path.join(self._node_dir, "splash")
         
         self.source_code = None
-
     def generate(self):
         self.source_code = self._sourceCodeGenerator.generate()
 

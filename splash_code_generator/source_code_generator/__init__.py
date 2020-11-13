@@ -9,15 +9,29 @@ from ._util import *
 
 class SourceCodeGenerator:
     def __init__(self, pkg_name, json):
-        node_data_list = json["nodeDataArray"]
-        link_data_list = json["linkDataArray"]
+        try:
+            node_data_list = json["nodeDataArray"] 
+        except:
+            node_Data_list = []
+        try:
+            link_data_list = json["linkDataArray"]
+        except:
+            link_data_list = [] 
         node_data_parsed = self._parse_node_data(node_data_list)
+        try:
+            factory_list = node_data_parsed["factories"]
+        except:
+            factory_list = []
+        try:
+            stream_port_list = node_data_parsed("stream_ports")
+        except:
+            stream_port_list = []
 
         self.buildUnitGenerator = BuildUnitGenerator(
             pkg_name, node_data_parsed, link_data_list)
-        self.factoryGenerator = FactoryGenerator(node_data_parsed["factories"])
-        self.streamPortGenerator = StreamPortGenerator(
-            node_data_parsed["stream_ports"])
+        
+        self.factoryGenerator = FactoryGenerator(factory_list)
+        self.streamPortGenerator = StreamPortGenerator(stream_port_list)
         self.skeletonCodeGenerator = SkeletonCodeGenerator(
             node_data_parsed, link_data_list)
 
