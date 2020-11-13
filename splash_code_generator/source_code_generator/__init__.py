@@ -23,7 +23,7 @@ class SourceCodeGenerator:
         except:
             factory_list = []
         try:
-            stream_port_list = node_data_parsed("stream_ports")
+            stream_port_list = node_data_parsed["stream_ports"]
         except:
             stream_port_list = []
 
