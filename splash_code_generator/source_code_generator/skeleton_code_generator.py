@@ -88,16 +88,28 @@ class SkeletonCodeGenerator:
         _str = append_lines(
             _str, "Generated automatically by Splash Code Generator for {}".format(component["name"]), 1)
         _str = append_lines(_str, "'''", 0)
-        _str = append_lines(_str, self._import_message(), 0)
+        _str = append_lines(_str, self._import_message(component), 0)
         _str = append_lines(_str, self._import_scl(), 0)
         if component["factory"]:
             _str = append_lines(_str, self._import_factory(component), 0)
         _str = append_lines(_str, self._generate_class(component), 0)
         return _str
 
-    def _import_message(self):
+    def _import_message(self, component):
         _str = ""
-        _str = append_lines(_str, "from std_msgs.msg import String", 0)
+        message_type_list = []
+        for output_port in component["stream_output_ports"]:
+            if "MessageType" in output_port.keys():
+                message_type_list.append(output_port["MessageType"])
+        message_type_list = list(set(message_type_list))
+        message_type_str = ""
+        i = 0
+        for message_type in message_type_list:
+            if i > 0:
+                message_type_str += ", "
+            message_type_str += message_type
+            i += 1
+        _str = append_lines(_str, "from std_msgs.msg import {}".format(message_type_str), 0)
         return _str
 
     def _import_factory(self, component):
@@ -149,32 +161,42 @@ class SkeletonCodeGenerator:
             for input_port in component["stream_input_ports"]:
                 pair = self._find_output_port_for_input_port(input_port)
                 channel = pair["Channel"]
+                message_type = ""
+                if "MessageType" in pair.keys():
+                    message_type = pair["MessageType"]
                 for fusion_operator in self._fusion_operators:
                     if pair in fusion_operator["stream_output_ports"]:
                         from_fusion_flag = True
                         break
                 _str = append_lines(
-                    _str, self._append_input_port_for_fusion(channel, from_fusion_flag), 1)
+                    _str, self._append_input_port_for_fusion(channel, message_type, from_fusion_flag), 1)
         else:
             count = 1
             for input_port in component["stream_input_ports"]:
                 pair = self._find_output_port_for_input_port(input_port)
                 channel = pair["Channel"]
+                message_type = ""
+                if "MessageType" in pair.keys():
+                    message_type = pair["MessageType"]
+                
                 for fusion_operator in self._fusion_operators:
                     if pair in fusion_operator["stream_output_ports"]:
                         from_fusion_flag = True
                         break
                 _str = append_lines(_str, self._append_input_port(
-                    channel, "user_callback_{}".format(count), from_fusion_flag), 1)
+                    channel, message_type, "user_callback_{}".format(count), from_fusion_flag), 1)
                 count = count + 1
         for output_port in component["stream_output_ports"]:
             channel = output_port["Channel"]
+            message_type = ""
+            if "MessageType" in output_port.keys():
+                message_type = output_port["MessageType"]
             if(component["category"] == "fusionOperator"):
                 _str = append_lines(
                     _str, self._append_output_port_for_fusion(channel), 1)
             else:
                 _str = append_lines(
-                    _str, self._append_output_port(channel), 1)
+                    _str, self._append_output_port(channel, message_type), 1)
         return _str
 
     def _generate_user_callbacks(self, component):
@@ -202,34 +224,34 @@ class SkeletonCodeGenerator:
         _str = append_lines(_str, "pass", 1)
         return _str
 
-    def _append_input_port(self, channel, user_callback_name, from_fusion=False):
+    def _append_input_port(self, channel, message_type, user_callback_name, from_fusion=False):
         _str = ""
         if from_fusion:
             _str = "self.attach_stream_input_port(channel=\"{}\", callback=self.{}, from_fusion={})".format(channel, user_callback_name, from_fusion)
         else:
-            _str = "self.attach_stream_input_port(msg_type=String, channel=\"{}\", callback=self.{})".format(channel, user_callback_name)
+            _str = "self.attach_stream_input_port(msg_type={}, channel=\"{}\", callback=self.{})".format(message_type, channel, user_callback_name)
         return _str
 
-    def _append_input_port_for_fusion(self, channel, from_fusion=False):
+    def _append_input_port_for_fusion(self, channel, message_type, from_fusion=False):
         _str = ""
         if from_fusion:
             _str = "self.attach_stream_input_port(channel=\"{}\", from_fusion={})".format(channel, from_fusion)
         else:
-            _str = "self.attach_stream_input_port(msg_type=String, channel=\"{}\")".format(channel)
+            _str = "self.attach_stream_input_port(msg_type={}, channel=\"{}\")".format(message_type, channel)
         return _str
 
     def _find_output_port_for_input_port(self, input_port):
         for link in self._links:
             if(link["to"] == input_port["key"]):
                 for stream_port in self._stream_ports:
-                    if(stream_port["PORT_TYPE"] == "STREAM_OUTPUT_PORT" and stream_port["key"] == link["from"]):
+                    if(stream_port["port_type"] == "STREAM_OUTPUT_PORT" and stream_port["key"] == link["from"]):
                         return stream_port
         return None
     def _find_channel_name_for_input_port(self, input_port):
         for link in self._links:
             if(link["to"] == input_port["key"]):
                 for stream_port in self._stream_ports:
-                    if(stream_port["PORT_TYPE"] == "STREAM_OUTPUT_PORT" and stream_port["key"] == link["from"]):
+                    if(stream_port["port_type"] == "STREAM_OUTPUT_PORT" and stream_port["key"] == link["from"]):
                         return stream_port["Channel"]
         return None
 
@@ -241,9 +263,9 @@ class SkeletonCodeGenerator:
                         return event_port["Event"]
         return None
 
-    def _append_output_port(self, channel):
+    def _append_output_port(self, channel, message_type):
         _str = ""
-        _str = "self.attach_stream_output_port(msg_type=String, channel=\"{}\")".format(channel)
+        _str = "self.attach_stream_output_port(msg_type={}, channel=\"{}\")".format(message_type, channel)
         return _str
 
     def _append_output_port_for_fusion(self, channel):

@@ -14,10 +14,10 @@ def relate_stream_ports(component, stream_ports):
     new_stream_port = []
     for stream_port in stream_ports:
         if(stream_port["group"] == component["key"]):
-            if(stream_port["PORT_TYPE"] == "STREAM_INPUT_PORT"):
+            if(stream_port["port_type"] == "STREAM_INPUT_PORT"):
                 stream_port = __simplify_port(stream_port)
                 component["stream_input_ports"].append(stream_port)
-            elif(stream_port["PORT_TYPE"] == "STREAM_OUTPUT_PORT"):
+            elif(stream_port["port_type"] == "STREAM_OUTPUT_PORT"):
                 stream_port = __simplify_port(stream_port)
                 component["stream_output_ports"].append(stream_port)
         else:

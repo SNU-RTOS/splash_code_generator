@@ -4,16 +4,20 @@ from .source_code_generator import SourceCodeGenerator
 from .source_code_validator import SourceCodeValidator
 from .source_code_generator._util import append_lines, CamelCaseConverter
 
-import os
+import os, json
 
 
 class CodeGenerator():
     def __init__(self, args):
+        if(args.update):
+            print('update')
+            return
         rosPackageGenerator = ROSPackageGenerator(args.name, args.path)
 
         jsonParser = JsonParser(args.file)
         json_parsed = jsonParser.parse()
-
+        self._json_file_path = args.file
+        self._ws_path = args.path
         self._sourceCodeGenerator = SourceCodeGenerator(
             args.name, json_parsed)
 
@@ -26,9 +30,8 @@ class CodeGenerator():
         self._node_dir = os.path.join(self._pkg_path, self._pkg_name)
 
         self._splash_dir = os.path.join(self._node_dir, "splash")
-
+        
         self.source_code = None
-
     def generate(self):
         self.source_code = self._sourceCodeGenerator.generate()
 
@@ -87,6 +90,18 @@ class CodeGenerator():
                 self.source_code)
         else:
             print("Source code not generated yet")
+
+    def save(self):
+        json_parsed = ""
+        with open(self._json_file_path, "r") as f:
+            json_parsed = json.load(f)
+        with open(self._json_file_path, "w") as f:
+            source_info = {}
+            source_info["name"] = self._pkg_name
+            source_info["path"] = self._ws_path
+            json_parsed["sourceInfo"] = source_info
+            json.dump(json_parsed, f, sort_keys=True, indent=4)
+
     def _generate_splash_server_source_code(self):
         _str = ""
         # _str = append_lines(_str, "import sys", 0)
@@ -95,6 +110,7 @@ class CodeGenerator():
         _str = append_lines(_str, "def main():", 0)
         _str = append_lines(_str, "scl.init()", 1)
         return _str
+
     def _generate_launch(self, build_units):
         _str = ""
         _str = append_lines(_str, "from launch import LaunchDescription", 0)
@@ -322,3 +338,5 @@ class CodeGenerator():
         file_path = os.path.join(skeleton_dir, name+".py")
         with open(file_path, "w") as f:
             f.write(code)
+
+  
