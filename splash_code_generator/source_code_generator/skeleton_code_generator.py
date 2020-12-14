@@ -102,11 +102,15 @@ class SkeletonCodeGenerator:
             if "MessageType" in output_port.keys():
                 message_type_list.append(output_port["MessageType"])
         for input_port in component["stream_input_ports"]:
-            if "MessageType" in input_port.keys():
-                message_type_list.append(input_port["MessageType"])
+            pair = self._find_output_port_for_input_port(input_port)
+            channel = pair["Channel"]
+            if "MessageType" in pair.keys():
+                message_type_list.append(pair["MessageType"])
+
         message_type_list = list(set(message_type_list))
         message_type_str = ""
         i = 0
+        
         for message_type in message_type_list:
             if i > 0:
                 message_type_str += ", "
