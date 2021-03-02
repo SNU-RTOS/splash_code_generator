@@ -173,6 +173,7 @@ class Core():
             f.write(_str)
 
     def _generate_splash_factory_structure(self):
+        os.makedirs(self._splash_dir + '/root_factory/')
         for tree in self._sourceCodeGenerator.forest:
             os.makedirs(self._splash_dir + '/root_factory/' + tree['leap_path'])
             for (root, dirs, files) in os.walk(self._splash_dir + '/root_factory'):

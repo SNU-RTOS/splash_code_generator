@@ -101,7 +101,7 @@ class SourceCodeGenerator:
                 return find_leap(child, path)
 
         for factory in self.factories_dict.values():
-            if 'group' not in factory:
+            if 'group' not in factory or factory['group'] == '':
                 factory['group'] = -1
 
         self.forest = build_tree(self.factories_dict.values(), 'group')
@@ -165,7 +165,7 @@ class SourceCodeGenerator:
         for component in build_unit['components']:
             key = component['key']
             path = ''
-            if 'group' in component:
+            if 'group' in component and component['group'] in self.factories_dict and 'path' in self.factories_dict[component['group']]:
                 path = self.factories_dict[component['group']]['path'].replace('/', '.') + '.' + self.factories_dict[component['group']]['key']
             import_component_script = append_lines(import_component_script, f'from ..root_factory{path}.{key} import {key}', 0)
             component_build_script = append_lines(component_build_script, f'build_unit.add({key}.build())', 0)
