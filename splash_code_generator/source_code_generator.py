@@ -39,6 +39,8 @@ class SourceCodeGenerator:
             # print(factory)
         self._make_structure_tree()
         for port in self.ports_dict.values():
+            if port['category'] == 'modeChangeOutputPort' or port['category'] == 'eventOutputPort':
+                continue
             try:
                 self.components_dict[port['group']]['ports'].append(port)
                 self._find_channel_for_input_port(port)
@@ -123,8 +125,9 @@ class SourceCodeGenerator:
         scripts = ''
         classes_dict = {"processingComponent": 'ProcessingComponent', "sourceComponent": 'SourceComponent', "sinkComponent": 'SinkComponent', 'fusionOperator': 'FusionOperator'}
         component_class = classes_dict[component['category']]
+        component_name = component['key']
         scripts = append_lines(scripts, f'from scl.components import {component_class}', 0)
-        scripts = append_lines(scripts, 'from scl.ports import StreamInputPort, StreamOutputPort', 0)
+        # scripts = append_lines(scripts, 'from scl.ports import StreamInputPort, StreamOutputPort', 0)
         messageTypes = []
         import_msg_scripts = ''
         import_callback_scripts = ''
@@ -140,19 +143,23 @@ class SourceCodeGenerator:
         scripts = append_lines(scripts, import_msg_scripts, 0)
         scripts = append_lines(scripts, import_callback_scripts, 0)
         scripts = append_lines(scripts, 'def build():', 0)
-        scripts = append_lines(scripts, f'component = {component_class}()', 1)
+        scripts = append_lines(scripts, f'component = {component_class}(\"{component_name}\")', 1)
         for port in component['ports']:
+            port_name = port['key']
             port_channel = port['Channel']
             port_type = port['MessageType']
             if port['port_type'] == 'STREAM_INPUT_PORT':
                 port_class = 'StreamInputPort'
-                if component['category'] != 'fusionOperator':
-                    scripts = append_lines(scripts, f'component.attach({port_class}(\"{port_channel}\", {port_type}, {port_channel}.callback))', 1)
+                if component['category'] == 'fusionOperator':
+                    scripts = append_lines(scripts, f'component.create_and_attach_stream_input_port(\"{port_name}\", {port_type}, \"{port_channel}\")', 1)
                 else:
-                    scripts = append_lines(scripts, f'component.attach({port_class}(\"{port_channel}\", {port_type}))', 1)
+                    scripts = append_lines(scripts, f'component.create_and_attach_stream_input_port(\"{port_name}\", {port_type}, \"{port_channel}\", {port_channel}.callback)', 1)
             elif port['port_type'] == 'STREAM_OUTPUT_PORT':
                 port_class = 'StreamOutputPort'
-                scripts = append_lines(scripts, f'component.attach({port_class}(\"{port_channel}\", {port_type}))', 1)
+                port_rate = 'None'
+                if 'Rate' in port and port['Rate'] > 0:
+                    port_rate = port['Rate']
+                scripts = append_lines(scripts, f'component.create_and_attach_stream_output_port(\"{port_name}\", {port_type}, \"{port_channel}\", {port_rate})', 1)
         scripts = append_lines(scripts, 'return component', 1)
         component['build_script'] = scripts
     
