@@ -199,12 +199,20 @@ class Core():
             if component['category'] == 'fusionOperator':
                 continue
             for port in component['ports']:
-                if port['port_type'] == 'STREAM_INPUT_PORT':
+                if 'port_type' in port and port['port_type'] == 'STREAM_INPUT_PORT':
                     if not os.path.isdir(ports_path):
                         os.makedirs(ports_path)
                         with open(ports_path+'/__init__.py', 'w') as f:
                             f.write('')
                     callback_script_path = ports_path + '/' + port['Channel'] + '.py'
+                    with open(callback_script_path, 'w') as f:
+                        f.write(port['callback_script'])
+                if 'Event' in port and port['category'] == 'eventInputPort':
+                    if not os.path.isdir(ports_path):
+                        os.makedirs(ports_path)
+                        with open(ports_path+'/__init__.py', 'w') as f:
+                            f.write('')
+                    callback_script_path = ports_path + '/' + port['Event'] + '.py'
                     with open(callback_script_path, 'w') as f:
                         f.write(port['callback_script'])
         
